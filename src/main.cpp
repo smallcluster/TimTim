@@ -14,6 +14,7 @@
 ********************************************************************************************/
 
 #include "raylib-cpp.hpp"
+#include "GameMap.h"
 
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
@@ -22,14 +23,16 @@
 //----------------------------------------------------------------------------------
 // Global Variables Definition
 //----------------------------------------------------------------------------------
-int screenWidth = 800;
-int screenHeight = 450;
+const int screenWidth = 800;
+const int screenHeight = 450;
+
+GameMap map = GameMap(20,20);
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
 void UpdateDrawFrame(void);     // Update and Draw one frame
-
+void UpdateMouvements(void);
 //----------------------------------------------------------------------------------
 // Main Enry Point
 //----------------------------------------------------------------------------------
@@ -37,7 +40,7 @@ int main()
 {
     // Initialization
     //--------------------------------------------------------------------------------------
-    raylib::Window window(screenWidth, screenHeight, "raylib-cpp [core] example - basic window");
+    raylib::Window window(screenWidth, screenHeight, "TimTim");
 
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
@@ -48,7 +51,9 @@ int main()
     // Main game loop
     while (!window.ShouldClose())    // Detect window close button or ESC key
     {
+        ClearBackground(RAYWHITE);
         UpdateDrawFrame();
+        DrawFPS(10, 10);
     }
 #endif
 
@@ -64,15 +69,16 @@ void UpdateDrawFrame(void)
     //----------------------------------------------------------------------------------
     // TODO: Update your variables here
     //----------------------------------------------------------------------------------
+    Camera2D camera = { 0 };
+    camera.zoom = 1.f;
+
 
     // Draw
     //----------------------------------------------------------------------------------
     BeginDrawing();
-
-        ClearBackground(RAYWHITE);
-
-        DrawText("Congrats! You created your first raylib-cpp window!", 190, 200, 20, LIGHTGRAY);
-
+        BeginMode2D(camera);
+            map.Draw();
+        EndMode2D();
     EndDrawing();
     //----------------------------------------------------------------------------------
 }
