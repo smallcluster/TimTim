@@ -15,64 +15,76 @@
 
 #include "raylib-cpp.hpp"
 
+//-------------------------------------------------------
+//  RAYGUI
+//-------------------------------------------------------
+#define RAYGUI_IMPLEMENTATION // THIS FIRST
+#include "external/raygui.h"
+//-------------------------------------------------------
+
+#include "Sprite.h"
+#include <memory>
+
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
 #endif
 
-//----------------------------------------------------------------------------------
-// Global Variables Definition
-//----------------------------------------------------------------------------------
-int screenWidth = 800;
-int screenHeight = 450;
-
-//----------------------------------------------------------------------------------
-// Module Functions Declaration
-//----------------------------------------------------------------------------------
-void UpdateDrawFrame(void);     // Update and Draw one frame
-
-//----------------------------------------------------------------------------------
-// Main Enry Point
-//----------------------------------------------------------------------------------
-int main()
+int main(void)
 {
-    // Initialization
-    //--------------------------------------------------------------------------------------
-    raylib::Window window(screenWidth, screenHeight, "raylib-cpp [core] example - basic window");
+    const int screenWidth = 800;
+    const int screenHeight = 450;
 
-#if defined(PLATFORM_WEB)
-    emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
-#else
-    SetTargetFPS(60);   // Set our game to run at 60 frames-per-second
-    //--------------------------------------------------------------------------------------
+    raylib::Window window(screenWidth, screenHeight, "Test sprite animations");
+    window.SetTargetFPS(60);
+
+    std::shared_ptr<raylib::Texture2D> texture = std::make_shared<raylib::Texture2D>("./data/tux.png");
+
+    AnimatedSprite player;
+    player.position = raylib::Vector2(0,0);
+
+    auto animations = LoadAnimationFrames("./data/tux.txt");
+
+    for(auto& pair : animations){
+        SpriteAnimation anim;
+        anim.frames = pair.second;
+        anim.spriteSheet = texture;
+
+        anim.speed = 8;
+
+        player.SetAnimation(pair.first, anim);
+    }
+
+    player.PlayAnimation("run");
+
+    raylib::Camera2D cam;
+    cam.offset = {screenWidth/2, screenHeight/2};
+    cam.rotation = 0;
+    cam.zoom = 4;
+
 
     // Main game loop
-    while (!window.ShouldClose())    // Detect window close button or ESC key
+    while (!window.ShouldClose())
     {
-        UpdateDrawFrame();
+        window.BeginDrawing();
+        window.ClearBackground(WHITE);
+        float y = 0;
+        if(GuiButton({0, y,128,64}, "idle")){
+            player.PlayAnimation("idle");
+        }
+        y += 64+8;
+        if(GuiButton({0, y,128,64}, "walk")){
+            player.PlayAnimation("walk");
+        }
+        y += 64+8;
+        if(GuiButton({0, y,128,64}, "run")){
+            player.PlayAnimation("run");
+        }
+            cam.BeginMode();
+
+                player.Draw(window.GetFrameTime(), true);
+
+            cam.EndMode();
+        window.EndDrawing();
     }
-#endif
-
     return 0;
-}
-
-//----------------------------------------------------------------------------------
-// Module Functions Definition
-//----------------------------------------------------------------------------------
-void UpdateDrawFrame(void)
-{
-    // Update
-    //----------------------------------------------------------------------------------
-    // TODO: Update your variables here
-    //----------------------------------------------------------------------------------
-
-    // Draw
-    //----------------------------------------------------------------------------------
-    BeginDrawing();
-
-        ClearBackground(RAYWHITE);
-
-        DrawText("Congrats! You created your first raylib-cpp window!", 190, 200, 20, LIGHTGRAY);
-
-    EndDrawing();
-    //----------------------------------------------------------------------------------
 }
