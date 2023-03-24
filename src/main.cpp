@@ -37,6 +37,7 @@ raylib::Window window;
 GameMap map = GameMap(20,20);
 Player player = Player(0,0);
 AnimatedSprite test;
+
 raylib::Camera2D cam;
 
 json testJson = R"(
@@ -61,16 +62,14 @@ int main()
     window.Init(screenWidth, screenHeight, "TimTim");
     // After windows init !!!!
     std::shared_ptr<raylib::Texture2D> texture = std::make_shared<raylib::Texture2D>("./data/tux.png");
+
     test.position = raylib::Vector2(screenWidth/2,screenHeight/2);
+
+    test = AnimatedSprite(texture,{});
+    test.position = raylib::Vector2(screenWidth/2,screenHeight/2);
+
     auto animations = LoadAnimationFrames("./data/tux.txt");
-    for(auto& pair : animations){
-        SpriteAnimation anim;
-        anim.frames = pair.second;
-        anim.spriteSheet = texture;
-        anim.speed = 8;
-        test.SetAnimation(pair.first, anim);
-    }
-    test.PlayAnimation("run");
+
     cam.offset = {0, 0};
     cam.rotation = 0;
     cam.zoom = 1.0f;

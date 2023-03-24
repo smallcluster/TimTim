@@ -10,25 +10,14 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <optional>
 #include <fstream>
 #include <string>
 
-
-
-struct SpriteAnimation {
-    std::shared_ptr<raylib::Texture2D> spriteSheet;
-    int speed = 0;
-    std::vector<raylib::Rectangle> frames;
-};
-
 std::map<std::string, std::vector<raylib::Rectangle>> LoadAnimationFrames(const std::string& path){
     std::map<std::string, std::vector<raylib::Rectangle>> map;
-
     std::ifstream file(path);
     std::string delimiter = ",";
     char const* digits = "0123456789";
-
     while (file){
         // Read line
         std::string line;
@@ -50,7 +39,6 @@ std::map<std::string, std::vector<raylib::Rectangle>> LoadAnimationFrames(const 
         line.erase(0, line.find(delimiter) + delimiter.length());
         int h = std::stoi(line);
         raylib::Rectangle rect(x,y,w,h);
-
         // Save data
         map[animationName].push_back(rect);
     }
@@ -58,45 +46,46 @@ std::map<std::string, std::vector<raylib::Rectangle>> LoadAnimationFrames(const 
     return map;
 }
 
-class AnimatedSprite {
+class Sprite {
 public:
     raylib::Vector2 position;
+    explicit Sprite(std::shared_ptr<raylib::Texture2D> texture) : _texture(std::move(texture)){}
+    virtual void Draw(float delta){
+        raylib::Vector2 offset(-_texture->width/2.0f, -_texture->height/2.0f);
+        _texture->Draw(position+offset);
+    }
+    int GetWidth(){return  _texture->width;}
+    int GetHeight(){return  _texture->height;}
+
+protected:
+    std::shared_ptr<raylib::Texture2D> _texture;
+};
+
+class AnimatedSprite : public Sprite {
+public:
     bool loop = true;
+    int frameRate = 0;
 
-    void Draw(float delta, bool debug = false){
-        if(!_currentAnimation.has_value())
-            return;
+    AnimatedSprite(std::shared_ptr<raylib::Texture2D> texture, std::vector<raylib::Rectangle> frames) : Sprite(std::move(texture)), _frames(std::move(frames)) {}
 
-        int frame = int(_timer);
-        // Draw frame
-        raylib::Rectangle& rect = _currentAnimation.value()->frames[frame];
-
+    void Draw(float delta) override {
+        int index = int(_timer);
+        raylib::Rectangle& rect = _frames[index];
         raylib::Vector2 offset(rect.width/2, rect.height/2);
-        _currentAnimation.value()->spriteSheet->Draw(rect, position-offset);
-
-        if(debug){
-            DrawRectangleLines(position.x-offset.x, position.y-offset.y, rect.width, rect.height, RED);
-        }
-
+        _texture->Draw(rect, position-offset);
         // Update timer
-        _timer += (float) _currentAnimation.value()->speed * delta;
-        int maxFrame = _currentAnimation.value()->frames.size()-1;
+        _timer += (float) frameRate * delta;
+        int maxFrame = _frames.size()-1;
         if(_timer > maxFrame) _timer = loop ? 0 : maxFrame;
     }
 
-    void PlayAnimation(const std::string& name){
-        _currentAnimation = {&(_animations[name])};
-        _timer = 0; // Reset timer
-    }
-
-    void SetAnimation(const std::string& name, SpriteAnimation animation){
-        _animations[name] = std::move(animation);
+    void SetFrames(std::vector<raylib::Rectangle> frames){
+        _frames = std::move(frames);
     }
 
 private:
-    float _timer;
-    std::optional<SpriteAnimation*> _currentAnimation;
-    std::map<std::string, SpriteAnimation> _animations;
+    float _timer = 0;
+    std::vector<raylib::Rectangle> _frames;
 };
 
 

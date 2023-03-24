@@ -25,7 +25,7 @@ if (NOT raylib_cpp_FOUND)
     FetchContent_MakeAvailable(raylib_cpp)
 endif()
 
-
+# JSON for Modern C++
 find_package(nlohmann_json 3.2.0 QUIET)
 if (NOT nlohmann_json_FOUND)
     include(FetchContent)
@@ -40,13 +40,9 @@ endif()
 
 # This is the main part:
 set(SOURCES
-        src/external/raygui/raygui.h
         src/external/raygui/raygui.cpp
-        src/GameMap.h
-        src/Player.h
-        src/Sprite.h
-
         src/main.cpp
+        src/Game.cpp src/Game.h
         )
 add_executable(${PROJECT_NAME} ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
