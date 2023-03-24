@@ -5,24 +5,18 @@
 #include "Scene.h"
 
 void Scene::Update(float delta) {
-    for(GameObject* obj : _gameObjects){
+    for(auto& obj : _gameObjects){
         obj->Update(delta);
     }
 }
 
 void Scene::Draw() {
-    for(GameObject* obj : _gameObjects){
+    for(auto& obj : _gameObjects){
         obj->Draw();
     }
 }
 
-void Scene::RegisterGameObject(GameObject *obj) {
+void Scene::RegisterGameObject(std::shared_ptr<GameObject> obj) {
     _gameObjects.push_back(obj);
-}
-
-Scene::~Scene() {
-    for(GameObject* obj : _gameObjects){
-        delete obj;
-    }
 }
 

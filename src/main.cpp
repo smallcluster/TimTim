@@ -12,9 +12,9 @@ public:
 
     TestScene() {
         // Player setup
-        _player = new Player(0,0);
+        _player = std::make_shared<Player>(0,0);
         // Map setup
-        auto* _map = new GameMap(50, 50);
+        auto _map = std::make_shared<GameMap>(50, 50);
 
         // Camera setup
         _cam.offset = {0};
@@ -47,7 +47,7 @@ public:
     }
 
 private:
-    Player* _player;
+    std::shared_ptr<Player> _player;
     raylib::Camera2D _cam;
 };
 

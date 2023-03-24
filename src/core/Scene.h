@@ -7,6 +7,7 @@
 
 #include "GameObject.h"
 #include <vector>
+#include <memory>
 
 // Basic scene
 // A scene will update and draw registered gameobject.
@@ -16,11 +17,10 @@ class Scene {
 public:
     virtual void Update(float delta);
     virtual void Draw();
-    void RegisterGameObject(GameObject* obj);
-    ~Scene();
+    void RegisterGameObject(std::shared_ptr<GameObject> obj);
 
 private:
-    std::vector<GameObject*> _gameObjects;
+    std::vector<std::shared_ptr<GameObject>> _gameObjects;
 };
 
 #endif //TIMTIM_SCENE_H
