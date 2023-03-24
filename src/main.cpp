@@ -15,6 +15,7 @@
 
 #include "raylib-cpp.hpp"
 #include "GameMap.h"
+#include "Player.h"
 
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
@@ -27,6 +28,8 @@ const int screenWidth = 800;
 const int screenHeight = 450;
 
 GameMap map = GameMap(20,20);
+Player player = Player(0,0);
+
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
@@ -78,6 +81,9 @@ void UpdateDrawFrame(void)
     BeginDrawing();
         BeginMode2D(camera);
             map.Draw();
+            player.Draw();
+            player.UpdatePosition();
+            player.DrawPosition();
         EndMode2D();
     EndDrawing();
     //----------------------------------------------------------------------------------

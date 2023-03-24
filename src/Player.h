@@ -8,30 +8,33 @@
 
 class Player {
 private:
-    float posX;
-    float posY;
-//    Sptite
+    Vector2 playerPosition{};
 
 public:
-    Player() {
-
+    Player(float posX, float posY) {;
+        this->playerPosition = { posX, posY };
     }
 
-    void UpdateMouvements(void){
-        // Update Mouvements
+    void Draw() {
+        DrawRectangleV(this->playerPosition, (Vector2){ 16, 16 }, RED);
+    }
+
+    const Vector2 &getPlayerPosition() const {
+        return playerPosition;
+    }
+
+    void UpdatePosition(){
+        // Update Position
         //----------------------------------------------------------------------------------
-        if (IsKeyDown(KEY_RIGHT)) {
+        if (IsKeyDown(KEY_RIGHT)) playerPosition.x += 3;
+        if (IsKeyDown(KEY_LEFT)) playerPosition.x -= 3;
+        if (IsKeyDown(KEY_DOWN)) playerPosition.y += 3;
+        if (IsKeyDown(KEY_UP)) playerPosition.y -= 3;
+    }
 
-        };
-        if (IsKeyDown(KEY_LEFT)) {
-
-        };
-        if (IsKeyDown(KEY_UP)) {
-
-        };
-        if (IsKeyDown(KEY_DOWN)) {
-
-        };
+    void DrawPosition() const {
+        const char *posString = ("X: " + std::to_string(this->playerPosition.x) + " Y: " + std::to_string(this->playerPosition.y)).c_str();
+        DrawText(posString,150, 10,20, YELLOW);
     }
 };
 

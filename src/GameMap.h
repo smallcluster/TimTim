@@ -10,8 +10,7 @@
 #ifndef TIMTIM_GAMEMAP_H
 #define TIMTIM_GAMEMAP_H
 
-const int MAP_TILE_SIZE = 50;
-const int MAP_LINE_SIZE = 1.f;
+const int MAP_TILE_SIZE = 16;
 
 class GameMap {
 private:
