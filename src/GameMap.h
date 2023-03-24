@@ -30,19 +30,12 @@ public:
         return tilesX;
     }
 
-    void setTilesX(int tilesX) {
-        GameMap::tilesX = tilesX;
-    }
 
     int getTilesY() const {
         return tilesY;
     }
 
-    void setTilesY(int tilesY) {
-        GameMap::tilesY = tilesY;
-    }
-
-    void Draw() {
+    void Draw() const {
         for (int y = 0; y < this->tilesY; y++)
         {
             for (int x = 0; x < this->tilesX; x++)
