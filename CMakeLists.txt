@@ -31,6 +31,7 @@ set(SOURCES
         src/external/raygui/raygui.cpp
         src/GameMap.h
         src/Player.h
+        src/Sprite.h
 
         src/main.cpp
         )

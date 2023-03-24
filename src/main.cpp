@@ -14,8 +14,10 @@
 ********************************************************************************************/
 
 #include "raylib-cpp.hpp"
+#include "external/raygui/raygui.h"
 #include "GameMap.h"
 #include "Player.h"
+#include "Sprite.h"
 
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
@@ -29,6 +31,8 @@ const int screenHeight = 450;
 
 GameMap map = GameMap(20,20);
 Player player = Player(0,0);
+AnimatedSprite test;
+raylib::Camera2D cam;
 
 
 //----------------------------------------------------------------------------------
@@ -44,6 +48,25 @@ int main()
     //--------------------------------------------------------------------------------------
     raylib::Window window(screenWidth, screenHeight, "TimTim");
 
+    // After windows init !!!!
+    std::shared_ptr<raylib::Texture2D> texture = std::make_shared<raylib::Texture2D>("./data/tux.png");
+    test.position = raylib::Vector2(screenWidth/2,screenHeight/2);
+    auto animations = LoadAnimationFrames("./data/tux.txt");
+    for(auto& pair : animations){
+        SpriteAnimation anim;
+        anim.frames = pair.second;
+        anim.spriteSheet = texture;
+        anim.speed = 8;
+        test.SetAnimation(pair.first, anim);
+    }
+    test.PlayAnimation("run");
+
+
+    cam.offset = {0, 0};
+    cam.rotation = 0;
+    cam.zoom = 1.0f;
+
+    //--------------------------------------------------------------------------------------
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
 #else
@@ -67,23 +90,33 @@ int main()
 //----------------------------------------------------------------------------------
 void UpdateDrawFrame(void)
 {
-    // Update
-    //----------------------------------------------------------------------------------
-    // TODO: Update your variables here
-    //----------------------------------------------------------------------------------
-    Camera2D camera = { 0 };
-    camera.zoom = 1.f;
-
 
     // Draw
     //----------------------------------------------------------------------------------
     BeginDrawing();
-        BeginMode2D(camera);
+        // DRAW WORLD
+        cam.BeginMode();
             map.Draw();
             player.Draw();
             player.UpdatePosition();
             player.DrawPosition();
-        EndMode2D();
+
+            test.Draw(GetFrameTime(), true);
+        cam.EndMode();
+
+        // DRAW GUI
+        float y = 0;
+        if(GuiButton({0, y,128,64}, "idle")){
+            test.PlayAnimation("idle");
+        }
+        y += 64+8;
+        if(GuiButton({0, y,128,64}, "walk")){
+            test.PlayAnimation("walk");
+        }
+        y += 64+8;
+        if(GuiButton({0, y,128,64}, "run")){
+            test.PlayAnimation("run");
+        }
     EndDrawing();
     //----------------------------------------------------------------------------------
 }
