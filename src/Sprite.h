@@ -16,9 +16,9 @@
 
 
 
-typedef struct SpriteAnimation {
+struct SpriteAnimation {
     std::shared_ptr<raylib::Texture2D> spriteSheet;
-    int speed;
+    int speed = 0;
     std::vector<raylib::Rectangle> frames;
 };
 

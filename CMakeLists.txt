@@ -25,6 +25,19 @@ if (NOT raylib_cpp_FOUND)
     FetchContent_MakeAvailable(raylib_cpp)
 endif()
 
+
+find_package(nlohmann_json 3.2.0 QUIET)
+if (NOT nlohmann_json_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+            nlohmann_json
+            GIT_REPOSITORY https://github.com/nlohmann/json.git
+            GIT_TAG 3.2.0
+    )
+    FetchContent_MakeAvailable(nlohmann_json)
+endif()
+
+
 # This is the main part:
 set(SOURCES
         src/external/raygui/raygui.h
@@ -37,7 +50,7 @@ set(SOURCES
         )
 add_executable(${PROJECT_NAME} ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
-target_link_libraries(${PROJECT_NAME} PUBLIC raylib raylib_cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::nlohmann_json)
 
 # Web Configurations
 if (${PLATFORM} STREQUAL "Web")

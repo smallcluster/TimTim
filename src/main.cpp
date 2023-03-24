@@ -19,6 +19,9 @@
 #include "Player.h"
 #include "Sprite.h"
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
 #endif
@@ -35,6 +38,13 @@ GameMap map = GameMap(20,20);
 Player player = Player(0,0);
 AnimatedSprite test;
 raylib::Camera2D cam;
+
+json testJson = R"(
+{
+    "pi": 3.141,
+    "happy": true
+}
+)"_json;
 
 
 //----------------------------------------------------------------------------------
