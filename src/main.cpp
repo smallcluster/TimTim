@@ -13,40 +13,77 @@
 *
 ********************************************************************************************/
 
-#include "raylib-cpp.hpp"    // Raylib
-#include "external/raygui/raygui.h" // GUI lib for debug
-
+#include "raylib-cpp.hpp"
+#include "GameMap.h"
+#include "Player.h"
 
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
 #endif
 
-int main(void)
+//----------------------------------------------------------------------------------
+// Global Variables Definition
+//----------------------------------------------------------------------------------
+const int screenWidth = 800;
+const int screenHeight = 450;
+
+GameMap map = GameMap(20,20);
+Player player = Player(0,0);
+
+
+//----------------------------------------------------------------------------------
+// Module Functions Declaration
+//----------------------------------------------------------------------------------
+void UpdateDrawFrame(void);     // Update and Draw one frame
+//----------------------------------------------------------------------------------
+// Main Enry Point
+//----------------------------------------------------------------------------------
+int main()
 {
-    const int screenWidth = 800;
-    const int screenHeight = 450;
+    // Initialization
+    //--------------------------------------------------------------------------------------
+    raylib::Window window(screenWidth, screenHeight, "TimTim");
 
-    raylib::Window window(screenWidth, screenHeight, "Test sprite animations");
-    window.SetTargetFPS(60);
-
-    raylib::Camera2D cam;
-    cam.offset = {screenWidth/2, screenHeight/2};
-    cam.rotation = 0;
-    cam.zoom = 4;
-
+#if defined(PLATFORM_WEB)
+    emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
+#else
+    SetTargetFPS(60);   // Set our game to run at 60 frames-per-second
+    //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!window.ShouldClose())
+    while (!window.ShouldClose())    // Detect window close button or ESC key
     {
-        window.BeginDrawing();
-        window.ClearBackground(WHITE);
-
-            // Cam view
-            cam.BeginMode();
-
-
-            cam.EndMode();
-        window.EndDrawing();
+        ClearBackground(RAYWHITE);
+        UpdateDrawFrame();
+        DrawFPS(10, 10);
     }
+#endif
+
     return 0;
+}
+
+//----------------------------------------------------------------------------------
+// Module Functions Definition
+//----------------------------------------------------------------------------------
+void UpdateDrawFrame(void)
+{
+    // Update
+    //----------------------------------------------------------------------------------
+    // TODO: Update your variables here
+    //----------------------------------------------------------------------------------
+    Camera2D camera = { 0 };
+    camera.zoom = 1.f;
+
+
+    // Draw
+    //----------------------------------------------------------------------------------
+    BeginDrawing();
+        BeginMode2D(camera);
+            map.Draw();
+            player.Draw();
+            player.UpdatePosition();
+            player.DrawPosition();
+        EndMode2D();
+    EndDrawing();
+    //----------------------------------------------------------------------------------
 }

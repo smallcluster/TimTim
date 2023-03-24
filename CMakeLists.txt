@@ -29,6 +29,8 @@ endif()
 set(SOURCES
         src/external/raygui/raygui.h
         src/external/raygui/raygui.cpp
+        src/GameMap.h
+        src/Player.h
 
         src/main.cpp
         )
