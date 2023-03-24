@@ -1,7 +1,6 @@
 
 #include "core/Scene.h"
 #include "Player.h"
-#include "core/Resource.h"
 #include "GameMap.h"
 
 //----------------------------------------------------------------------------------------------------------------------

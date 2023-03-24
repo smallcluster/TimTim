@@ -20,7 +20,7 @@ void sprite::Draw(){
 
     raylib::Rectangle src(0,0, srcWidth, srcHeight);
     raylib::Rectangle dest(position.x, position.y, _texture->width*positiveScale.x, _texture->height*positiveScale.y);
-    _texture->Draw(src, dest, offset);
+    _texture->Draw(src, dest, offset, rotation);
 }
 int sprite::GetWidth(){return  _texture->width;}
 int sprite::GetHeight(){return  _texture->height;}
@@ -73,7 +73,7 @@ void AnimatedSprite::Draw() {
 
     raylib::Rectangle src(rect.x,rect.y, srcWidth, srcHeight);
     raylib::Rectangle dest(position.x, position.y, rect.width*positiveScale.x, rect.width*positiveScale.y);
-    _texture->Draw(src, dest, offset);
+    _texture->Draw(src, dest, offset, rotation);
 }
 
 void AnimatedSprite::SetFrames(std::vector<raylib::Rectangle> frames){

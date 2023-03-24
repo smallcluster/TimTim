@@ -12,8 +12,7 @@
 #include <memory>
 
 // Object to display a centered texture
-// Supports positive & negative (flip) scaling
-// TODO: handle rotations
+// Supports positive/negative (flip) scaling & rotations
 class sprite : public GameObject {
 public:
     sprite(std::shared_ptr<raylib::Texture2D> texture);
