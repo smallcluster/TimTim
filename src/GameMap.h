@@ -1,23 +1,20 @@
 //
 // Created by donov on 22/03/2023.
 //
-#include "raylib-cpp.hpp"
-
-#if defined(PLATFORM_WEB)
-#include <emscripten/emscripten.h>
-#endif
 
 #ifndef TIMTIM_GAMEMAP_H
 #define TIMTIM_GAMEMAP_H
 
-const int MAP_TILE_SIZE = 50;
+#include "raylib-cpp.hpp"
+#include "core/GameObject.h"
 
-class GameMap {
+const int MAP_TILE_SIZE = 32;
+
+class GameMap : public GameObject {
 private:
     // Map data type
     int tilesX;            // Number of tiles in X axis
     int tilesY;            // Number of tiles in Y axis
-
 
 public:
     GameMap(int tilesX, int tilesY) {
@@ -29,12 +26,11 @@ public:
         return tilesX;
     }
 
-
     int getTilesY() const {
         return tilesY;
     }
 
-    void Draw() const {
+    void Draw() override {
         for (int y = 0; y < this->tilesY; y++)
         {
             for (int x = 0; x < this->tilesX; x++)

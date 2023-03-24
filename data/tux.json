@@ -1,0 +1,139 @@
+{
+  "animations": [
+    {
+      "name": "idle",
+      "framerate" : 3,
+      "playback" : "PING_PONG",
+      "frames": [
+        {
+          "x": 32,
+          "y": 0,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 64,
+          "y": 0,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 96,
+          "y": 0,
+          "width": 32,
+          "height": 32
+        }
+      ]
+    },
+    {
+      "name": "walk",
+      "framerate" : 12,
+      "playback" : "LOOP",
+      "frames": [
+        {
+          "x": 0,
+          "y": 32,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 32,
+          "y": 32,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 64,
+          "y": 32,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 96,
+          "y": 32,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 128,
+          "y": 32,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 160,
+          "y": 32,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 192,
+          "y": 32,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 224,
+          "y": 32,
+          "width": 32,
+          "height": 32
+        }
+      ]
+    },
+    {
+      "name": "run",
+      "framerate" : 16,
+      "playback" : "LOOP",
+      "frames": [
+        {
+          "x": 0,
+          "y": 64,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 32,
+          "y": 64,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 64,
+          "y": 64,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 96,
+          "y": 64,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 128,
+          "y": 64,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 160,
+          "y": 64,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 192,
+          "y": 64,
+          "width": 32,
+          "height": 32
+        },
+        {
+          "x": 224,
+          "y": 64,
+          "width": 32,
+          "height": 32
+        }
+      ]
+    }
+  ]
+}

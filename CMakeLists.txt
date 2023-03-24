@@ -40,14 +40,26 @@ endif()
 
 # This is the main part:
 set(SOURCES
+        # LIBS
         src/external/raygui/raygui.h
         src/external/raygui/raygui.cpp
+
+        # CORE
+        src/core/Scene.cpp
+        src/core/Scene.h
+        src/core/Resource.cpp
+        src/core/Resource.h
+        src/core/GameObject.h
+
+        # RENDERING
+        src/render/sprite.cpp
+        src/render/sprite.h
+
+        # GAME
         src/GameMap.h
         src/Player.h
-        src/Sprite.h
-
         src/main.cpp
-        src/Game.cpp src/Game.h
+
         )
 add_executable(${PROJECT_NAME} ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
