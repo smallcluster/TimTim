@@ -47,7 +47,7 @@ set(SOURCES
         src/Sprite.h
 
         src/main.cpp
-        )
+        src/Camera.h)
 add_executable(${PROJECT_NAME} ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 target_link_libraries(${PROJECT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::nlohmann_json)

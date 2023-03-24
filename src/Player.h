@@ -34,7 +34,7 @@ public:
 
     void DrawPosition() const {
         std::string posString = ("X: " + std::to_string(this->playerPosition.x) + " Y: " + std::to_string(this->playerPosition.y));
-        raylib::DrawText(posString, 150, 10,20, raylib::YELLOW);
+        raylib::DrawText(posString, playerPosition.x, playerPosition.y + 30,20, raylib::YELLOW);
     }
 };
 
