@@ -8,18 +8,18 @@
 
 class Player {
 private:
-    Vector2 playerPosition{};
+    raylib::Vector2 playerPosition;
 
 public:
     Player(float posX, float posY) {;
-        this->playerPosition = { posX, posY };
+        this->playerPosition = raylib::Vector2(posX, posY);
     }
 
     void Draw() {
         DrawRectangleV(this->playerPosition, (Vector2){ 16, 16 }, RED);
     }
 
-    const Vector2 &getPlayerPosition() const {
+    const raylib::Vector2 &getPlayerPosition() const {
         return playerPosition;
     }
 
@@ -33,8 +33,8 @@ public:
     }
 
     void DrawPosition() const {
-        const char *posString = ("X: " + std::to_string(this->playerPosition.x) + " Y: " + std::to_string(this->playerPosition.y)).c_str();
-        DrawText(posString,150, 10,20, YELLOW);
+        std::string posString = ("X: " + std::to_string(this->playerPosition.x) + " Y: " + std::to_string(this->playerPosition.y));
+        raylib::DrawText(posString, 150, 10,20, raylib::YELLOW);
     }
 };
 

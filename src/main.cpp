@@ -29,6 +29,8 @@
 const int screenWidth = 800;
 const int screenHeight = 450;
 
+raylib::Window window;
+
 GameMap map = GameMap(20,20);
 Player player = Player(0,0);
 AnimatedSprite test;
@@ -46,8 +48,7 @@ int main()
 {
     // Initialization
     //--------------------------------------------------------------------------------------
-    raylib::Window window(screenWidth, screenHeight, "TimTim");
-
+    window.Init(screenWidth, screenHeight, "TimTim");
     // After windows init !!!!
     std::shared_ptr<raylib::Texture2D> texture = std::make_shared<raylib::Texture2D>("./data/tux.png");
     test.position = raylib::Vector2(screenWidth/2,screenHeight/2);
@@ -60,8 +61,6 @@ int main()
         test.SetAnimation(pair.first, anim);
     }
     test.PlayAnimation("run");
-
-
     cam.offset = {0, 0};
     cam.rotation = 0;
     cam.zoom = 1.0f;
@@ -70,15 +69,15 @@ int main()
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
 #else
-    SetTargetFPS(60);   // Set our game to run at 60 frames-per-second
+    window.SetTargetFPS(60);   // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     // Main game loop
     while (!window.ShouldClose())    // Detect window close button or ESC key
     {
-        ClearBackground(RAYWHITE);
+        window.ClearBackground(RAYWHITE);
         UpdateDrawFrame();
-        DrawFPS(10, 10);
+        window.DrawFPS(10, 10);
     }
 #endif
 
@@ -93,7 +92,7 @@ void UpdateDrawFrame(void)
 
     // Draw
     //----------------------------------------------------------------------------------
-    BeginDrawing();
+    window.BeginDrawing();
         // DRAW WORLD
         cam.BeginMode();
             map.Draw();
@@ -117,6 +116,6 @@ void UpdateDrawFrame(void)
         if(GuiButton({0, y,128,64}, "run")){
             test.PlayAnimation("run");
         }
-    EndDrawing();
+    window.EndDrawing();
     //----------------------------------------------------------------------------------
 }
