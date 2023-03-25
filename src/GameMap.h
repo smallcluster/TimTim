@@ -7,39 +7,34 @@
 
 #include "raylib-cpp.hpp"
 #include "core/GameObject.h"
+#include "raylib-tileson.h"
 
 const int MAP_TILE_SIZE = 32;
 
 class GameMap : public GameObject {
 private:
     // Map data type
-    int tilesX;            // Number of tiles in X axis
-    int tilesY;            // Number of tiles in Y axis
+    int width;            // Number of tiles in X axis
+    int height;            // Number of tiles in Y axis
+    Map map;
 
 public:
-    GameMap(int tilesX, int tilesY) {
-        this->tilesX = tilesX;
-        this->tilesY = tilesY;
+    GameMap(const char * mapPath) {
+        this->map = LoadTiled(mapPath);
+        this->width = this->map.width;
+        this->height = this->map.height;
     }
 
-    int getTilesX() const {
-        return tilesX;
+    int getWidth() const {
+        return this->width;
     }
 
-    int getTilesY() const {
-        return tilesY;
+    int getHeight() const {
+        return this->height;
     }
 
     void Draw() override {
-        for (int y = 0; y < this->tilesY; y++)
-        {
-            for (int x = 0; x < this->tilesX; x++)
-            {
-                // Draw tiles from id (and tile borders)
-                DrawRectangle(x*MAP_TILE_SIZE, y*MAP_TILE_SIZE, MAP_TILE_SIZE, MAP_TILE_SIZE, Fade(BLUE, 0.9f));
-                DrawRectangleLines(x*MAP_TILE_SIZE, y*MAP_TILE_SIZE, MAP_TILE_SIZE, MAP_TILE_SIZE, Fade(DARKBLUE, 0.5f));
-            }
-        }
+        DrawTiled(this->map, 0, 0, WHITE);
     }
 };
 

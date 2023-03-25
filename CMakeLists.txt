@@ -25,6 +25,18 @@ if (NOT raylib_cpp_FOUND)
     FetchContent_MakeAvailable(raylib_cpp)
 endif()
 
+# tmx
+find_package(raylib-tileson QUIET)
+if (NOT raylib-tileson_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+            raylib-tileson
+            GIT_REPOSITORY https://github.com/RobLoach/raylib-tileson.git
+            GIT_TAG v4.2.0
+    )
+    FetchContent_MakeAvailable(raylib-tileson)
+endif()
+
 
 find_package(nlohmann_json 3.2.0 QUIET)
 if (NOT nlohmann_json_FOUND)
@@ -63,7 +75,7 @@ set(SOURCES
         )
 add_executable(${PROJECT_NAME} ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
-target_link_libraries(${PROJECT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::nlohmann_json)
+target_link_libraries(${PROJECT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::nlohmann_json raylib-tileson)
 
 # Web Configurations
 if (${PLATFORM} STREQUAL "Web")

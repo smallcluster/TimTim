@@ -14,7 +14,7 @@ public:
         // Player setup
         _player = std::make_shared<Player>(0,0);
         // Map setup
-        auto _map = std::make_shared<GameMap>(50, 50);
+        auto _map = std::make_shared<GameMap>("./data/maps/test.json");
 
         // Camera setup
         _cam.offset = {0};
