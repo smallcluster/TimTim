@@ -14,27 +14,27 @@ const int MAP_TILE_SIZE = 32;
 class GameMap : public GameObject {
 private:
     // Map data type
-    int width;            // Number of tiles in X axis
-    int height;            // Number of tiles in Y axis
-    Map map;
+    int _width;            // Number of tiles in X axis
+    int _height;            // Number of tiles in Y axis
+    Map _map;
 
 public:
     GameMap(const char * mapPath) {
-        this->map = LoadTiled(mapPath);
-        this->width = this->map.width;
-        this->height = this->map.height;
+        _map = LoadTiled(mapPath);
+        _width = _map.width;
+        _height = _map.height;
     }
 
     int getWidth() const {
-        return this->width;
+        return _width;
     }
 
     int getHeight() const {
-        return this->height;
+        return _height;
     }
 
     void Draw() override {
-        DrawTiled(this->map, 0, 0, WHITE);
+        DrawTiled(_map, 0, 0, WHITE);
     }
 };
 

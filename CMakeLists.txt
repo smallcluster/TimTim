@@ -25,7 +25,7 @@ if (NOT raylib_cpp_FOUND)
     FetchContent_MakeAvailable(raylib_cpp)
 endif()
 
-# tmx
+# tmx (Tiled parser for raylib)
 find_package(raylib-tileson QUIET)
 if (NOT raylib-tileson_FOUND)
     include(FetchContent)
@@ -37,7 +37,7 @@ if (NOT raylib-tileson_FOUND)
     FetchContent_MakeAvailable(raylib-tileson)
 endif()
 
-
+# General Json parser
 find_package(nlohmann_json 3.2.0 QUIET)
 if (NOT nlohmann_json_FOUND)
     include(FetchContent)
