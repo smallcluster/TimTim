@@ -32,30 +32,11 @@ public:
         // Sort points on x axis
         auto sortedPoints = GetSortedPoints(true);
 
-//        return [sortedPos=std::move(sortedPos)](float t){
-//            float val = 0;
-//            for(int i=0; i < sortedPos.size()-1; i++){
-//                const raylib::Vector2& p = sortedPos[i];
-//                const raylib::Vector2& p2 = sortedPos[i+1];
-//                if(p.x == p2.x)
-//                    continue;
-//                float slope = (p2.y-p.y)/(p2.x-p.x);
-//                float offest = (p2.x*p.y-p.x*p2.y)/(p2.x-p.x);
-//                if(i==0)
-//                    val += (float) (t <= p2.x && t >= p.x)*(t*slope+offest);
-//                else
-//                    val += (float) (t <= p2.x && t > p.x)*(t*slope+offest);
-//            }
-//            return val;
-//        };
-
-
-        // TODO: handle bezier cubic curves
-        return [sortedPos=std::move(sortedPoints)](float t){
+        return [sortedPoints=std::move(sortedPoints)](float t){
             float val = 0;
-            for(int i=0; i < sortedPos.size()-1; i++){
-                const CurvePoint& p = sortedPos[i];
-                const CurvePoint& p2 = sortedPos[i+1];
+            for(int i=0; i < sortedPoints.size()-1; i++){
+                const CurvePoint& p = sortedPoints[i];
+                const CurvePoint& p2 = sortedPoints[i+1];
                 if(p.position.x == p2.position.x)
                     continue;
                 float tangentLength = (p2.position.x-p.position.x)/2.f;
@@ -65,12 +46,12 @@ public:
                 raylib::Vector2 control2 = p2.position+controlOffset2*tangentLength;
 
                 float relativeT = (t-p.position.x)/(p2.position.x-p.position.x);
-                raylib::Vector2 bezierPoint = p.position*(1-relativeT)*(1-relativeT)*(1-relativeT)+control1*3*relativeT*(1-relativeT)*(1-relativeT)+control2*3*relativeT*relativeT*(1-relativeT)+p2.position*relativeT*relativeT*relativeT;
+                float y = p.position.y*(1-relativeT)*(1-relativeT)*(1-relativeT)+control1.y*3*relativeT*(1-relativeT)*(1-relativeT)+control2.y*3*relativeT*relativeT*(1-relativeT)+p2.position.y*relativeT*relativeT*relativeT;
 
-                if(i==0)
-                    val += (float) (t <= p2.position.x && t >= p.position.x)*bezierPoint.y;
+                if(p.position.x == 0 || i == 0)
+                    val += (float) (t <= p2.position.x && t >= p.position.x)*y;
                 else
-                    val += (float) (t <= p2.position.x && t > p.position.x)*bezierPoint.y;
+                    val += (float) (t <= p2.position.x && t > p.position.x)*y;
             }
             return val;
         };
@@ -219,6 +200,7 @@ private:
         std::vector<CurvePoint> sortedPoints(points.size());
         for(int i=0; i < points.size(); i++) sortedPoints[i] = points[i];
         std::sort(sortedPoints.begin(), sortedPoints.end(), [](const CurvePoint& p1, const CurvePoint& p2) {return p1.position.x < p2.position.x;});
+
         if(sortedPoints[0].position.x > 0 && addEdges){
             CurvePoint edge;
             edge.position.x = 0;
@@ -241,18 +223,13 @@ private:
         for(int i=0; i < sortedPoints.size()-1; i++){
             const CurvePoint& p = sortedPoints[i];
             const CurvePoint& p2 = sortedPoints[i+1];
-            if(p.position.x == p2.position.x)
-                continue;
             auto pos1 = LocalToScreen(p.position);
             auto pos2 = LocalToScreen(p2.position);
-            //pos1.DrawLine(pos2, BLACK);
-
             float tangentLength = (p2.position.x-p.position.x)/2.f;
             raylib::Vector2 controlOffset1{std::cos(p.rightAngle), std::sin(p.rightAngle)};
             raylib::Vector2 controlOffset2{-std::cos(p2.leftAngle), std::sin(p2.leftAngle)};
             raylib::Vector2 control1 = LocalToScreen(p.position+controlOffset1*tangentLength);
             raylib::Vector2 control2 = LocalToScreen(p2.position+controlOffset2*tangentLength);
-
             DrawLineBezierCubic(pos1,pos2, control1, control2, 1, BLACK);
         }
     }
