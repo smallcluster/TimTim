@@ -12,43 +12,43 @@ public:
 
     TestScene() {
         // Player setup
-        _player = std::make_shared<Player>(0,0);
+        player = std::make_shared<Player>(0, 0);
         // Map setup
-        auto _map = std::make_shared<GameMap>("./data/maps/test.json");
+        auto map = std::make_shared<GameMap>("./data/maps/test.json");
 
         // Camera setup
-        _cam.offset = {0};
-        _cam.target = {0};
-        _cam.zoom = 2.0f;
-        _cam.rotation = 0;
+        cam.offset = {0};
+        cam.target = {0};
+        cam.zoom = 2.0f;
+        cam.rotation = 0;
 
         // -- register gameobjects --
         // Update & drawing from back to front
-        RegisterGameObject(_map);
-        RegisterGameObject(_player);
+        RegisterGameObject(map);
+        RegisterGameObject(player);
 
     }
 
     void Update(float delta) override {
-        _cam.target = _player->position;
+        cam.target = player->position;
         Scene::Update(delta);
     }
 
     void Draw() override{
         ClearBackground(WHITE);
         // Draw Scene from camera
-        _cam.BeginMode();
+        cam.BeginMode();
             Scene::Draw();
-        _cam.EndMode();
+        cam.EndMode();
     }
 
     void SetCameratoScreen(int screenWidth, int screenHeight){
-        _cam.offset = {screenWidth/2.f,screenHeight/2.f};
+        cam.offset = {screenWidth / 2.f, screenHeight / 2.f};
     }
 
 private:
-    std::shared_ptr<Player> _player;
-    raylib::Camera2D _cam;
+    std::shared_ptr<Player> player;
+    raylib::Camera2D cam;
 };
 
 

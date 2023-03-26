@@ -22,7 +22,7 @@ public:
     int GetHeight();
 
 protected:
-    std::shared_ptr<raylib::Texture2D> _texture;
+    std::shared_ptr<raylib::Texture2D> texture;
 };
 
 // Object to display an animation centered on its position
@@ -45,8 +45,8 @@ public:
     bool Finished();
 
 protected:
-    float _timer = 0;
-    std::vector<raylib::Rectangle> _frames;
+    float timer = 0;
+    std::vector<raylib::Rectangle> frames;
 };
 
 

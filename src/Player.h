@@ -22,44 +22,44 @@ public:
         auto anims = Resource::LoadAnimationsData("./data/tux.json");
         for(auto& pair : anims){
             auto animatedSprite = std::make_shared<AnimatedSprite>(texture, pair.second);
-            _animations[pair.first] = animatedSprite;
+            animations[pair.first] = animatedSprite;
         }
         // Set default animation
-        _animation_name = "idle";
+        animationName = "idle";
     }
     Player(float posX, float posY) : Player() {
         position = raylib::Vector2(posX, posY);
     }
-    Player(raylib::Vector2 pos) : Player() {
+    explicit Player(raylib::Vector2 pos) : Player() {
         position = pos;
     }
 
     void Update(float delta) override {
-        _UpdatePosition(delta);
+        UpdatePosition(delta);
         // Update sprite position and advance its animation
-        _animations[_animation_name]->position = position;
-        _animations[_animation_name]->Update(delta);
+        animations[animationName]->position = position;
+        animations[animationName]->Update(delta);
     }
     void Draw() override {
-        _animations[_animation_name]->Draw(); // Draw sprite
-        _DrawPosition();
+        animations[animationName]->Draw(); // Draw sprite
+        DrawPosition();
     }
 
 
 private:
-    std::string _animation_name;
-    std::map<std::string, std::shared_ptr<AnimatedSprite>> _animations;
+    std::string animationName;
+    std::map<std::string, std::shared_ptr<AnimatedSprite>> animations;
 
-    void _SwitchAnimation(const std::string& name){
-        auto next_animation = std::make_pair(name, _animations[name]);
+    void SwitchAnimation(const std::string& name){
+        auto next_animation = std::make_pair(name, animations[name]);
         // Restart animation only if there is a real change
-        if(_animation_name != name){
-            _animation_name = name;
-            _animations[_animation_name]->StartAt(0.f); // playback at 0% <-> frame 0 <-> reset animation
+        if(animationName != name){
+            animationName = name;
+            animations[animationName]->StartAt(0.f); // playback at 0% <-> frame 0 <-> reset animation
         }
     }
 
-    void _UpdatePosition(float delta){
+    void UpdatePosition(float delta){
         raylib::Vector2 dir{0,0};
         if (IsKeyDown(KEY_RIGHT)) dir.x += 1;
         if (IsKeyDown(KEY_LEFT)) dir.x -= 1;
@@ -71,17 +71,17 @@ private:
 
         // Flip sprite
         if(dir.x != 0)
-            _animations[_animation_name]->scale.x = dir.x;
+            animations[animationName]->scale.x = dir.x;
 
         if(len > 1)
-            _SwitchAnimation("run"); // Diagonals
+            SwitchAnimation("run"); // Diagonals
         else if(len == 1)
-            _SwitchAnimation("walk");
+            SwitchAnimation("walk");
         else
-            _SwitchAnimation("idle");
+            SwitchAnimation("idle");
     }
 
-    void _DrawPosition() const {
+    void DrawPosition() const {
         std::string posString = ("X: " + std::to_string(position.x) + " Y: " + std::to_string(position.y));
         raylib::DrawText(posString, position.x, position.y + 30,12, raylib::RED);
     }

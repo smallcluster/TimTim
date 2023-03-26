@@ -20,7 +20,7 @@ public:
     void RegisterGameObject(std::shared_ptr<GameObject> obj);
 
 private:
-    std::vector<std::shared_ptr<GameObject>> _gameObjects;
+    std::vector<std::shared_ptr<GameObject>> gameObjects;
 };
 
 #endif //TIMTIM_SCENE_H

@@ -18,7 +18,7 @@ enum class ANIMATION_PLAYBACK {
 };
 
 struct AnimationData {
-    int framerate = 0;
+    float framerate = 0;
     ANIMATION_PLAYBACK playback = ANIMATION_PLAYBACK::ONCE;
     std::vector<raylib::Rectangle> frames;
 };
