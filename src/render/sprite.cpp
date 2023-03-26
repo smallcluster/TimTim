@@ -9,8 +9,8 @@
 //----------------------------------------------------------------------------------------------------------------------
 // CLASS: sprite
 //----------------------------------------------------------------------------------------------------------------------
-sprite::sprite(std::shared_ptr<raylib::Texture2D> texture) : texture(std::move(texture)) {}
-void sprite::Draw(){
+Sprite::Sprite(std::shared_ptr<raylib::Texture2D> texture) : texture(std::move(texture)) {}
+void Sprite::Draw(){
     raylib::Vector2 positiveScale(std::abs(scale.x), std::abs(scale.y));
     raylib::Vector2 offset(texture->width / 2.0f, texture->height / 2.0f);
     offset *= positiveScale;
@@ -22,15 +22,15 @@ void sprite::Draw(){
     raylib::Rectangle dest(position.x, position.y, texture->width * positiveScale.x, texture->height * positiveScale.y);
     texture->Draw(src, dest, offset, rotation);
 }
-int sprite::GetWidth(){return  texture->width;}
-int sprite::GetHeight(){return  texture->height;}
+int Sprite::GetWidth(){return  texture->width;}
+int Sprite::GetHeight(){return  texture->height;}
 
 
 //----------------------------------------------------------------------------------------------------------------------
 // CLASS: AnimatedSprite
 //----------------------------------------------------------------------------------------------------------------------
 AnimatedSprite::AnimatedSprite(std::shared_ptr<raylib::Texture2D> texture, AnimationData animData) :
-        sprite(std::move(texture)),
+        Sprite(std::move(texture)),
         frames(std::move(animData.frames)),
         playback(animData.playback),
         framerate(animData.framerate) {}

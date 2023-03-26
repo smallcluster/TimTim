@@ -51,7 +51,7 @@ endif()
 
 
 # This is the main part:
-set(SOURCES
+set(ENGINE_SRC
         # LIBS
         src/external/raygui/raygui.h
         src/external/raygui/raygui.cpp
@@ -66,21 +66,25 @@ set(SOURCES
         # RENDERING
         src/render/sprite.cpp
         src/render/sprite.h
+        src/render/particles.cpp
+        src/render/particles.h)
 
-        # GAME
+set(GAME_SRC
         src/GameMap.h
         src/Player.h
         src/main.cpp
-
         )
-add_executable(${PROJECT_NAME} ${SOURCES})
+
+# MAIN GAME
+add_executable(${PROJECT_NAME} ${ENGINE_SRC} ${GAME_SRC})
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 target_link_libraries(${PROJECT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::nlohmann_json raylib-tileson)
 
-# Web Configurations
-if (${PLATFORM} STREQUAL "Web")
-    # Tell Emscripten to build an example.html file.
-    set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
-endif()
 
-# That's it! You should have an example executable that you can run. Have fun!
+# Editor tools
+set(PARTICLE_EDIT_NAME PEdit)
+set(PARTICLE_EDITOR_SRC
+        tools/particle_editor.cpp)
+add_executable(${PARTICLE_EDIT_NAME} ${ENGINE_SRC} ${PARTICLE_EDITOR_SRC})
+set_target_properties(${PARTICLE_EDIT_NAME} PROPERTIES CXX_STANDARD 20)
+target_link_libraries(${PARTICLE_EDIT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::nlohmann_json)

@@ -13,9 +13,9 @@
 
 // Object to display a centered texture
 // Supports positive/negative (flip) scaling & rotations
-class sprite : public GameObject {
+class Sprite : public GameObject {
 public:
-    sprite(std::shared_ptr<raylib::Texture2D> texture);
+    Sprite(std::shared_ptr<raylib::Texture2D> texture);
     void Draw() override;
 
     int GetWidth();
@@ -28,7 +28,7 @@ protected:
 // Object to display an animation centered on its position
 // Same support as Sprite
 // Supports framerate manipulation, playback modes and reversing its animation
-class AnimatedSprite : public sprite {
+class AnimatedSprite : public Sprite {
 public:
     bool reverse = false;
     float framerate = 0;
