@@ -35,18 +35,18 @@ public:
 
 
         // curve func test
-        auto func = curveEdit.GetFunc();
-        int res = 500;
-        float t = 1.f/(float) res;
-        float scaleX = 3*64;
-        float scaleY = 6*16;
-        for(int i=0; i < res; i++){
-            float x = t*(float)i;
-            float y = func(x);
-            float x2 = t*(float)(i+1);
-            float y2 = func(x2);
-            DrawLine(x*scaleX,-y*scaleY,x2*scaleX,-y2*scaleY, YELLOW);
-        }
+//        auto func = curveEdit.GetFunc();
+//        int res = 500;
+//        float t = 1.f/(float) res;
+//        float scaleX = 3*64;
+//        float scaleY = 6*16;
+//        for(int i=0; i < res; i++){
+//            float x = t*(float)i;
+//            float y = func(x);
+//            float x2 = t*(float)(i+1);
+//            float y2 = func(x2);
+//            DrawLine(x*scaleX,-y*scaleY,x2*scaleX,-y2*scaleY, YELLOW);
+//        }
 
 
 
@@ -82,7 +82,7 @@ public:
             inputBoxFocus = inputBoxFocus == 2 ? 0 : 2;
         y += dy+height;
 
-        curveEdit.Draw({x,y,3*width,6*height});
+        //curveEdit.Draw({x,y,3*width,6*height});
         y += dy+6*height;
 
 
