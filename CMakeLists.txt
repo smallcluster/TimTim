@@ -67,7 +67,7 @@ set(ENGINE_SRC
         src/render/sprite.cpp
         src/render/sprite.h
         src/render/particles.cpp
-        src/render/particles.h)
+        src/render/particles.h src/gui/CurveEditor.cpp src/gui/CurveEditor.h)
 
 set(GAME_SRC
         src/GameMap.h
@@ -84,7 +84,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::n
 # Editor tools
 set(PARTICLE_EDIT_NAME PEdit)
 set(PARTICLE_EDITOR_SRC
-        tools/particle_editor.cpp)
+        tools/particle_editor.cpp src/gui/ContextMenu.cpp src/gui/ContextMenu.h)
 add_executable(${PARTICLE_EDIT_NAME} ${ENGINE_SRC} ${PARTICLE_EDITOR_SRC})
 set_target_properties(${PARTICLE_EDIT_NAME} PROPERTIES CXX_STANDARD 20)
 target_link_libraries(${PARTICLE_EDIT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::nlohmann_json)
