@@ -36,8 +36,10 @@ struct CurveParameterPoint {
 // A curve to interpolate a float value form 0 to 1
 class CurveParameter {
 public:
+    CurveParameter() = default;
+    CurveParameter(std::vector<CurveParameterPoint> data);
     float Eval(float t);
-    void AddPoint(CurveParameterPoint p);
+    void SetData(std::vector<CurveParameterPoint> data);
 private:
     // points are sorted along x axis
     std::vector<CurveParameterPoint> points;

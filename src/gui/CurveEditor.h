@@ -11,41 +11,133 @@
 #include <vector>
 #include <functional>
 #include <optional>
+#include <iostream>
 
 class CurveEditor {
 public:
 
     CurveEditor(){
+
+        // Initial point
         CurveParameterPoint p;
         p.position = raylib::Vector2(0,0);
         points.push_back(p);
+
+        // Setup context menu
+        menu.AddItem("Remove");
+        menu.AddItem("Right linear", true);
+        menu.AddItem("Left linear", true);
     }
 
     void DrawAndUpdate(raylib::Rectangle bounds, float fontsize){
-        raylib::Rectangle innerBounds{bounds.x+fontsize, bounds.y+fontsize, bounds.width-2*fontsize, bounds.height-2*fontsize};
+        innerBounds = raylib::Rectangle{bounds.x+fontsize, bounds.y+fontsize, bounds.width-2*fontsize, bounds.height-2*fontsize};
         raylib::Vector2 mouse{GetMousePosition()};
+
+        auto hoveredPoint = GetHoveredPoint(fontsize);
+
+
+        // Draw bg
+        bounds.Draw(WHITE);
+        innerBounds.DrawLines(BLACK);
 
         // Draw points
         for(auto& p : points){
-            raylib::Rectangle pRect{p.position.x-fontsize/2.f, p.position.y-fontsize/2.f, fontsize, fontsize};
-            p.position.DrawRectangle({fontsize, fontsize}, BLACK);
 
-            if(mouse.CheckCollision(pRect))
-                DrawRectangle(p.position.x-(fontsize+margin)/2.f, p.position.y-(fontsize+margin)/2.f, fontsize+margin, fontsize+margin, BLACK);
+            raylib::Vector2 screenPos = LocalToScreen(p.position);
+            raylib::Rectangle pRect{screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize};
 
+            // Draw point
+            if(selectedPoint && selectedPoint.value() == &p){
+                DrawRectangle(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, BLUE);
+                // TODO: Draw controls points
+            } else {
+                DrawRectangle(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, BLACK);
+            }
+
+
+            // point hover
+            if(hoveredPoint && hoveredPoint.value() == &p && !menu.IsVisible())
+                DrawRectangleLines(screenPos.x-(fontsize+margin)/2.f, screenPos.y-(fontsize+margin)/2.f, fontsize+margin, fontsize+margin, BLACK);
         }
+
+        // Draw Curve
+
+
+        //Draw Menu && update choice
+        if(menu.IsVisible()){
+            menu.DrawAndUpdate(fontsize);
+            auto item = menu.GetSelected();
+            if(item){
+                switch (item.value().index) {
+                    case 0:{
+                        menu.Hide();
+                        if(points.size() > 1){
+                            CurveParameterPoint* selected = selectedPoint.value();
+                            auto it = std::remove_if(points.begin(), points.end(), [selected](const CurveParameterPoint& p){return &p == selected;});
+                            points.erase(it, points.end());
+                            selectedPoint = {};
+                        }
+                        break;
+                    }
+                    case 1:{
+                        selectedPoint.value()->rightLinear = item.value().checked;
+                        break;
+                    }
+                    case 2:{
+                        selectedPoint.value()->leftLinear = item.value().checked;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Close/open menu
+        if(!menu.IsVisible()){
+            //TODO: select control point
+
+             if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && hoveredPoint.has_value())
+                selectedPoint = hoveredPoint;
+            else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !hoveredPoint.has_value())
+                selectedPoint = {};
+            else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && hoveredPoint.has_value()){
+                menu.position = mouse;
+                menu.Show();
+                selectedPoint = hoveredPoint;
+            } else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && mouse.CheckCollision(innerBounds)){
+                CurveParameterPoint p;
+                p.position = ScreenToLocal(mouse);
+                points.push_back(p);
+            } else if(selectedPoint && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+                selectedPoint.value()->position = Vector2Clamp(ScreenToLocal(mouse),{0,0}, {1,1});
+        }
+
     }
-
-    auto GetCurveParameter(){
-
-        return;
-    }
-
 
 private:
     constexpr static const float margin = 4;
     ContextMenu menu;
+    raylib::Rectangle innerBounds;
+
+
     std::vector<CurveParameterPoint> points;
+    std::optional<CurveParameterPoint*> selectedPoint;
+
+    std::optional<CurveParameterPoint*> GetHoveredPoint(float fontsize){
+        raylib::Vector2 mouse{GetMousePosition()};
+        for(auto& p : points){
+            raylib::Vector2 screenPos = LocalToScreen(p.position);
+            raylib::Rectangle pRect{screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize};
+            if(mouse.CheckCollision(pRect))
+                return {&p};
+        }
+        return {};
+    }
+    raylib::Vector2 LocalToScreen(const raylib::Vector2& position){
+        return {position.x*innerBounds.width+innerBounds.x, innerBounds.y+innerBounds.height-position.y*innerBounds.height};
+    }
+    raylib::Vector2 ScreenToLocal(const raylib::Vector2& position){
+        return {(position.x-innerBounds.x)/innerBounds.width, (innerBounds.y+innerBounds.height-position.y)/innerBounds.height};
+    }
 
 
 //    void Draw(raylib::Rectangle bounds){

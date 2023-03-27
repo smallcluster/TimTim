@@ -8,6 +8,10 @@
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
 
+//----------------------------------------------------------------------------------------------------------------------
+// ANIMATIONS
+//----------------------------------------------------------------------------------------------------------------------
+
 std::map<std::string, AnimationData>  Resource::LoadAnimationsData(const std::string& path){
     std::map<std::string, AnimationData> map;
     std::ifstream file(path);
@@ -43,6 +47,10 @@ ANIMATION_PLAYBACK Resource::ParsePlayback(const std::string &str) {
     return ANIMATION_PLAYBACK::ONCE; //TODO: Warn on wrong value
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+// INTERPOLATIONS
+//----------------------------------------------------------------------------------------------------------------------
+
 float Resource::Lerp(float t, float start, float end){
     return start + t * (end-start);
 }
@@ -53,8 +61,15 @@ raylib::Vector2 Resource::Bezier(float t, raylib::Vector2 start, raylib::Vector2
     return start*(1.f-t)*(1.f-t)*(1.f-t)+control1*3.f*t*(1.f-t)*(1.f-t)+control2*3.f*t*t*(1-t)+end*t*t*t;
 }
 
-void CurveParameter::AddPoint(CurveParameterPoint p) {
-    points.push_back(p);
+//----------------------------------------------------------------------------------------------------------------------
+// CURVE PARAMETER
+//----------------------------------------------------------------------------------------------------------------------
+
+CurveParameter::CurveParameter(std::vector<CurveParameterPoint> data) : points(std::move(data)) {
+}
+
+void CurveParameter::SetData(std::vector<CurveParameterPoint> data) {
+    points = std::move(data);
 }
 
 float CurveParameter::Eval(float t) {
@@ -103,3 +118,7 @@ float CurveParameter::Eval(float t) {
         }
     }
 }
+
+
+
+

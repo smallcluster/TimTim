@@ -82,7 +82,7 @@ public:
             inputBoxFocus = inputBoxFocus == 2 ? 0 : 2;
         y += dy+height;
 
-        //curveEdit.Draw({x,y,3*width,6*height});
+        curveEdit.DrawAndUpdate({x,y,3*width,6*height}, 12);
         y += dy+6*height;
 
 

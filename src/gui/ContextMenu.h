@@ -13,19 +13,24 @@
 
 class MenuItem {
 public:
-    bool checked = false;
-    bool checkable = false;
     std::string name = "";
+    bool checkable = false;
+    bool checked = false;
+    int index = 0;
 };
 
 class ContextMenu {
 
 public:
-    bool show = false;
+
     raylib::Vector2 position;
 
     auto GetSelected(){
         return selectedItem;
+    }
+
+    void AddItem(std::string name, bool checkable = false, bool checked = false){
+        items.push_back({name, checkable, checked, static_cast<int>(items.size())});
     }
 
     void DrawAndUpdate(float fontSize){
@@ -35,23 +40,24 @@ public:
         rect.Draw(LIGHTGRAY);
         rect.DrawLines(BLACK);
         // Items
+        auto startPos = position;
         for(auto& m : items){
             const auto itemMinSize = GetMinItemSize(m, fontSize);
-            DrawMenuItem(m, position, fontSize, rect.width);
+            DrawMenuItem(m, startPos, fontSize, rect.width);
             // item click
-            const raylib::Rectangle itemRect{position, itemMinSize};
+            const raylib::Rectangle itemRect{startPos, itemMinSize};
             if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && mouse.CheckCollision(itemRect)){
                 selectedItem = {m}; // select item
                 // update selected item state
                 if(m.checkable){
-                    m.checked = m.checked;
+                    m.checked = !m.checked;
                 }
             }
-            position.y += itemMinSize.y;
+            startPos.y += itemMinSize.y;
         }
         // Hide context menu
-        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !mouse.CheckCollision(rect) || !IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-            show = false;
+        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !mouse.CheckCollision(rect) || IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+            Hide();
     }
 
     raylib::Vector2 GetMinSize(float fontSize) const {
@@ -75,8 +81,8 @@ public:
         raylib::Color accentColor = mouse.CheckCollision(rect) ? BLUE : BLACK;
 
         rect.DrawLines(accentColor);
-        float x = margin;
-        float y = margin;
+        float x = rect.x + margin;
+        float y = rect.y + margin;
         if(m.checkable){
             DrawRectangle(x,y, fontSize, fontSize, m.checked ? BLUE : GRAY);
             x += fontSize + margin;
@@ -94,7 +100,19 @@ public:
         return {width, height};
     }
 
+    void Show(){
+        show = true;
+        selectedItem = {};
+    }
+    void Hide(){
+        show = false;
+        selectedItem = {};
+    }
+    bool IsVisible(){
+        return show;
+    }
 private:
+    bool show = false;
     constexpr static const float margin = 4;
     std::vector<MenuItem> items;
     std::optional<MenuItem> selectedItem;
