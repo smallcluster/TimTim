@@ -33,6 +33,11 @@ public:
         items.push_back({name, checkable, checked, static_cast<int>(items.size())});
     }
 
+    MenuItem* GetItemAt(int i){
+        return &items[i];
+    }
+
+
     void DrawAndUpdate(float fontSize){
         const raylib::Vector2 mouse{GetMousePosition()};
         raylib::Rectangle rect = GetMinRect(fontSize);
@@ -47,7 +52,7 @@ public:
             // item click
             const raylib::Rectangle itemRect{startPos, itemMinSize};
             if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && mouse.CheckCollision(itemRect)){
-                selectedItem = {m}; // select item
+                selectedItem = {&m}; // select item
                 // update selected item state
                 if(m.checkable){
                     m.checked = !m.checked;
@@ -60,7 +65,7 @@ public:
             Hide();
     }
 
-    raylib::Vector2 GetMinSize(float fontSize) const {
+    [[nodiscard]] raylib::Vector2 GetMinSize(float fontSize) const {
         std::vector<raylib::Rectangle> rectItems(items.size());
         std::transform(items.begin(), items.end(), rectItems.begin(), [fontSize](const MenuItem& m){return GetMinItemSize(m, fontSize);});
         auto max = *std::max_element(rectItems.begin(), rectItems.end(), [](const raylib::Rectangle& r1, const raylib::Rectangle& r2){return r1.width < r2.width;});
@@ -68,7 +73,7 @@ public:
         return {max.width, height};
     }
 
-    raylib::Rectangle GetMinRect(float fontsize){
+    [[nodiscard]] raylib::Rectangle GetMinRect(float fontsize) const {
         return {position, GetMinSize(fontsize)};
     }
 
@@ -108,14 +113,14 @@ public:
         show = false;
         selectedItem = {};
     }
-    bool IsVisible(){
+    [[nodiscard]] bool IsVisible() const{
         return show;
     }
 private:
     bool show = false;
     constexpr static const float margin = 4;
     std::vector<MenuItem> items;
-    std::optional<MenuItem> selectedItem;
+    std::optional<MenuItem*> selectedItem;
 };
 
 
