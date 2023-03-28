@@ -6,6 +6,7 @@
 #define TIMTIM_CURVEEDITOR_H
 
 #include "raylib-cpp.hpp"
+#include "../external/raygui/raygui.h"
 #include "../core/Resource.h"
 #include "ContextMenu.h"
 #include <vector>
@@ -17,16 +18,10 @@ class CurveEditor {
 public:
 
     CurveEditor(){
-
         // Initial point
         CurveParameterPoint p;
         p.position = raylib::Vector2(0.5,1);
         points.push_back(p);
-
-        // Setup context menu
-        menu.AddItem("Remove");
-        menu.AddItem("Right linear", true);
-        menu.AddItem("Left linear", true);
     }
 
     void DrawAndUpdate(raylib::Rectangle bounds, float fontsize){
@@ -132,7 +127,7 @@ public:
             menu.DrawAndUpdate(fontsize);
             auto item = menu.GetSelected();
             if(item){
-                switch (item.value()->index) {
+                switch (item.value()->index+(points.size() == 1)) {
                     case 0:{
                         menu.Hide();
                         if(points.size() > 1){
@@ -159,22 +154,31 @@ public:
         if(!menu.IsVisible()){
             //TODO: select control point
 
-            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && hoveredPoint.has_value())
+            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && hoveredPoint.has_value()){
                 selectedPoint = hoveredPoint;
+                mouseOffest = LocalToScreen(selectedPoint.value()->position) - mouse;
+            }
             else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !hoveredPoint.has_value())
                 selectedPoint = {};
             else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && hoveredPoint.has_value()){
-                menu.position = mouse;
-                menu.Show();
                 selectedPoint = hoveredPoint;
-                menu.GetItemAt(1)->checked = selectedPoint.value()->rightLinear;
-                 menu.GetItemAt(2)->checked = selectedPoint.value()->leftLinear;
+                menu = ContextMenu{};
+                menu.position = mouse;
+                if(points.size() > 1)
+                    menu.AddItem("Remove");
+                menu.AddItem("Right linear", true, selectedPoint.value()->rightLinear);
+                menu.AddItem("Left linear", true, selectedPoint.value()->leftLinear);
+                menu.Show();
+
             } else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && mouse.CheckCollision(innerBounds)){
                 CurveParameterPoint p;
                 p.position = ScreenToLocal(mouse);
                 points.push_back(p);
-            } else if(selectedPoint && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-                selectedPoint.value()->position = Vector2Clamp(ScreenToLocal(mouse),{0,0}, {1,1});
+            } else if(selectedPoint && IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
+
+                selectedPoint.value()->position = Vector2Clamp(ScreenToLocal(mouse+mouseOffest),{0,0}, {1,1});
+            }
+
         }
     }
 
@@ -193,11 +197,19 @@ public:
         selectedPoint = {};
     }
 
+    [[nodiscard]] bool IsMenuVisible() const {
+        return menu.IsVisible();
+    }
+
+    auto GetSelectedPoint(){
+        return selectedPoint;
+    }
+
 private:
     constexpr static const float margin = 4;
     ContextMenu menu;
     raylib::Rectangle innerBounds;
-
+    raylib::Vector2 mouseOffest{0,0};
     std::vector<CurveParameterPoint> points;
     std::optional<CurveParameterPoint*> selectedPoint;
 

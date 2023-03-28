@@ -8,6 +8,8 @@
 #include <functional>
 #include "../src/gui/CurveEditor.h"
 
+#define RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT 24
+
 //----------------------------------------------------------------------------------------------------------------------
 // EDITOR SCENE
 //----------------------------------------------------------------------------------------------------------------------
@@ -61,17 +63,16 @@ public:
 
 
         if(GuiButton({x,y,width, height}, "Load texture")){
-
         }
         y += dy+height;
 
         // --- settings options ---
 
-
         // Particle count
         GuiLabel({x,y,width,height}, "Count");
         y += dy+height/2;
-        if(GuiIntInput({x,y,width,height}, particlesCount, 0, 100000, inputBoxFocus == 1))
+
+        if(GuiSpinner({x,y,width,height}, "", &particlesCount, 0, 100000, inputBoxFocus == 1))
             inputBoxFocus = inputBoxFocus == 1 ? 0 : 1;
         y+=dy + height;
 
@@ -82,7 +83,9 @@ public:
             inputBoxFocus = inputBoxFocus == 2 ? 0 : 2;
         y += dy+height;
 
-        curveEdit.DrawAndUpdate({x,y,3*width,6*height}, 12);
+        GuiWindowBox({x,y,3*width,6*height}, "Scale");
+
+        curveEdit.DrawAndUpdate({x, y + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT, 3 * width, 6 * height-RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT}, 12);
         y += dy+6*height;
 
 

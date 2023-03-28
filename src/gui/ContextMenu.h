@@ -6,6 +6,7 @@
 #define TIMTIM_CONTEXTMENU_H
 
 #include "raylib-cpp.hpp"
+#include "../external/raygui/raygui.h"
 #include <vector>
 #include <optional>
 #include <numeric>
@@ -23,6 +24,14 @@ class ContextMenu {
 
 public:
 
+    ContextMenu() = default;
+
+    ContextMenu(const std::vector<MenuItem>& data){
+        for(auto& i : data){
+            AddItem(i.name, i.checkable, i.checked);
+        }
+    }
+
     raylib::Vector2 position;
 
     auto GetSelected(){
@@ -30,13 +39,8 @@ public:
     }
 
     void AddItem(std::string name, bool checkable = false, bool checked = false){
-        items.push_back({name, checkable, checked, static_cast<int>(items.size())});
+        items.push_back({std::move(name), checkable, checked, static_cast<int>(items.size())});
     }
-
-    MenuItem* GetItemAt(int i){
-        return &items[i];
-    }
-
 
     void DrawAndUpdate(float fontSize){
         const raylib::Vector2 mouse{GetMousePosition()};
@@ -63,6 +67,10 @@ public:
         // Hide context menu
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !mouse.CheckCollision(rect) || IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
             Hide();
+    }
+
+    auto GetSelectedItem(){
+        return selectedItem;
     }
 
     [[nodiscard]] raylib::Vector2 GetMinSize(float fontSize) const {
