@@ -38,7 +38,7 @@ public:
 
         // curve func test
         auto curve = curveEdit.GetCurveParameter();
-        int res = 500;
+        int res = 1000;
         float t = 1.f/(float) res;
         float scaleX = 3*64;
         float scaleY = 6*16;

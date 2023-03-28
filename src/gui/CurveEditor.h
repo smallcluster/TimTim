@@ -20,17 +20,20 @@ public:
     CurveEditor(){
         // Initial point
         CurveParameterPoint p;
-        p.position = raylib::Vector2(0.5,1);
+        p.position = raylib::Vector2{0.5, 1};
+        p.tangents = raylib::Vector2{0, 0};
         points.push_back(p);
     }
 
     void DrawAndUpdate(raylib::Rectangle bounds, float fontsize){
         innerBounds = raylib::Rectangle{bounds.x+fontsize, bounds.y+fontsize, bounds.width-2*fontsize, bounds.height-2*fontsize};
         raylib::Vector2 mouse{GetMousePosition()};
+        const float handleLength = fontsize*3;
+        const float handleSize = fontsize/1.5f;
 
         auto hoveredPoint = GetHoveredPoint(fontsize);
 
-
+        BeginScissorMode(bounds.x, bounds.y, bounds.width, bounds.height);
         // Draw bg
         bounds.Draw(WHITE);
 
@@ -61,23 +64,87 @@ public:
         raylib::DrawText("0.5", x, y+innerBounds.height/2.f, fontsize, LIGHTGRAY);
         raylib::DrawText("1", x, y+fontsize, fontsize, LIGHTGRAY);
 
-        if(points.size() == 0)
+        if(points.empty())
             return;
 
-        // Draw Curve
-        auto sortedPoint = GetSortedPoints();
+        auto sortedPoint = GetSortedPointsPtr();
 
+        // Update linear handles positions
+        for(int i=0; i < sortedPoint.size(); i++){
+            auto* p = sortedPoint[i];
+            // left
+            if(i > 0 && p->leftLinear){
+                auto* p2 = sortedPoint[i-1];
+                auto dir = p2->position-p->position;
+                p->tangents.x = dir.x == 0 ? 0 : dir.y/dir.x;
+            }
+            // right
+            if(i < sortedPoint.size()-1 && p->rightLinear){
+                auto* p2 = sortedPoint[i+1];
+                auto dir = p2->position-p->position;
+                p->tangents.y = dir.x == 0 ? 0 : dir.y/dir.x;
+            }
+        }
+
+        // Draw points
+        for(int i=0; i < sortedPoint.size(); i++){
+            const auto* p = sortedPoint[i];
+            raylib::Vector2 screenPos = LocalToScreen(p->position);
+
+            // Draw point
+            if(selectedPoint && selectedPoint.value() == p){
+                DrawRectangle(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, BLUE);
+                // Draw left handle
+                if(i > 0){
+                    raylib::Vector2 controlOffset{-1, -p->tangents.x};
+                    auto target = LocalToScreen(p->position+controlOffset);
+                    auto dir = target - screenPos;
+                    raylib::Vector2 control = screenPos + dir.Normalize() * handleLength;
+                    raylib::Rectangle controlRect{control.x-handleSize/2.f, control.y-handleSize/2.f, handleSize, handleSize};
+                    if(mouse.CheckCollision(controlRect) || leftControlSelected){
+                        controlRect.Draw(BLUE);
+                        screenPos.DrawLine(control, BLUE);
+                    }else{
+                        controlRect.Draw(GRAY);
+                        screenPos.DrawLine(control, GRAY);
+                    }
+
+                }
+                // Draw right handle
+                if(i < points.size()-1){
+                    raylib::Vector2 controlOffset{1, p->tangents.y};
+                    auto target = LocalToScreen(p->position+controlOffset);
+                    auto dir = target - screenPos;
+                    raylib::Vector2 control = screenPos + dir.Normalize() * handleLength;
+                    raylib::Rectangle controlRect{control.x-handleSize/2.f, control.y-handleSize/2.f, handleSize, handleSize};
+                    if(mouse.CheckCollision(controlRect) || leftControlSelected){
+                        controlRect.Draw(BLUE);
+                        screenPos.DrawLine(control, BLUE);
+                    }else{
+                        controlRect.Draw(GRAY);
+                        screenPos.DrawLine(control, GRAY);
+                    }
+                }
+            } else {
+                DrawRectangle(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, GRAY);
+            }
+
+            // point hover
+            if(hoveredPoint && hoveredPoint.value() == p)
+                DrawRectangleLines(screenPos.x-(fontsize+margin)/2.f, screenPos.y-(fontsize+margin)/2.f, fontsize+margin, fontsize+margin, BLACK);
+        }
+
+        // Draw Curve
         if(sortedPoint.size() == 1){
-            auto p = sortedPoint[0];
-            auto pos = LocalToScreen(p.position);
+            auto* p = sortedPoint[0];
+            auto pos = LocalToScreen(p->position);
             DrawLine(innerBounds.x, pos.y, innerBounds.x+innerBounds.width, pos.y, BLACK);
         }else {
             for(int i=0; i < sortedPoint.size()-1; i++){
-                const CurveParameterPoint& p1 = sortedPoint[i];
-                const CurveParameterPoint& p2 = sortedPoint[i+1];
-                auto pos1 = LocalToScreen(p1.position);
-                auto pos2 = LocalToScreen(p2.position);
-
+                const CurveParameterPoint* p1 = sortedPoint[i];
+                const CurveParameterPoint* p2 = sortedPoint[i+1];
+                auto pos1 = LocalToScreen(p1->position);
+                auto pos2 = LocalToScreen(p2->position);
                 // Constant on edge
                 if(pos1.x > innerBounds.x && i == 0){
                     DrawLine(innerBounds.x, pos1.y, pos1.x, pos1.y, BLACK);
@@ -85,41 +152,11 @@ public:
                 if(pos2.x < innerBounds.x+innerBounds.width && i == sortedPoint.size()-2){
                     DrawLine(pos2.x, pos2.y, innerBounds.x+innerBounds.width, pos2.y, BLACK);
                 }
-
-                // Linear
-                if(p1.rightLinear && p2.leftLinear){
-                    pos1.DrawLine(pos2, BLACK);
-                }
-                    // Bezier
-                else {
-                    float tangentLength = (pos2.x-pos1.x)/2.f;
-                    raylib::Vector2 centerControl = (pos1+pos2) / 2.f;
-                    raylib::Vector2 offset1{std::cos(p1.rightAngle), std::sin(p1.rightAngle)};
-                    raylib::Vector2 offset2{-std::cos(p2.leftAngle), std::sin(p1.leftAngle)};
-                    raylib::Vector2 control1 =  p1.rightLinear ? centerControl : pos1+offset1*tangentLength;
-                    raylib::Vector2 control2 = p2.leftLinear ? centerControl : pos2+offset2*tangentLength;
-                    DrawLineBezierCubic(pos1,pos2, control1, control2, 1, BLACK);
-                }
+                DrawHermiteNormalized(p1->position, p2->position, p1->tangents.y, p2->tangents.x);
             }
         }
 
-        for(auto& p : points){
-
-            raylib::Vector2 screenPos = LocalToScreen(p.position);
-            raylib::Rectangle pRect{screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize};
-
-            // Draw point
-            if(selectedPoint && selectedPoint.value() == &p){
-                DrawRectangle(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, BLUE);
-                // TODO: Draw controls points
-            } else {
-                DrawRectangle(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, BLACK);
-            }
-
-            // point hover
-            if(hoveredPoint && hoveredPoint.value() == &p)
-                DrawRectangleLines(screenPos.x-(fontsize+margin)/2.f, screenPos.y-(fontsize+margin)/2.f, fontsize+margin, fontsize+margin, BLACK);
-        }
+        EndScissorMode();
 
 
         //Draw Menu && update choice
@@ -150,16 +187,59 @@ public:
             }
         }
 
+
         // Close/open menu
         if(!menu.IsVisible()){
-            //TODO: select control point
 
-            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && hoveredPoint.has_value()){
+            // Select handle
+            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && selectedPoint){
+
+                auto* p = selectedPoint.value();
+                auto screenPos = LocalToScreen(p->position);
+
+                // Left control
+                raylib::Vector2 offsetLeft{-1, -p->tangents.x};
+                auto dirLeft = LocalToScreen(p->position+offsetLeft)- screenPos;
+                raylib::Vector2 controlLeft = screenPos + dirLeft.Normalize() * handleLength;
+
+                if(mouse.CheckCollision({controlLeft.x-handleSize/2.f, controlLeft.y-handleSize/2.f, handleSize, handleSize})){
+                    leftControlSelected = true;
+                    p->leftLinear = false;
+                }
+
+                // Right control
+                raylib::Vector2 offsetRight{1, p->tangents.y};
+                auto dirRight = LocalToScreen(p->position+offsetRight)- screenPos;
+                raylib::Vector2 controlRight = screenPos + dirRight.Normalize() * handleLength;
+
+                if(mouse.CheckCollision({controlRight.x-handleSize/2.f, controlRight.y-handleSize/2.f, handleSize, handleSize})){
+                    rightControlSelected = true;
+                    p->rightLinear = false;
+                }
+            }
+
+            // Unselect handles
+            if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)){
+                rightControlSelected = false;
+                leftControlSelected = false;
+            }
+
+            // move handle
+            if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && rightControlSelected){
+                auto* p = selectedPoint.value();
+                auto dir = ScreenToLocal(mouse)-p->position;
+                p->tangents.y = dir.x < 0.001f ? dir.y/0.001f : dir.y/dir.x;
+            } else if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && leftControlSelected){
+                auto* p = selectedPoint.value();
+                auto dir = ScreenToLocal(mouse)-p->position;
+                p->tangents.x = dir.x > -0.001f ? dir.y/(-0.001f) : dir.y/dir.x;
+            } else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && hoveredPoint){
                 selectedPoint = hoveredPoint;
-                mouseOffest = LocalToScreen(selectedPoint.value()->position) - mouse;
+                auto* p = selectedPoint.value();
+                mouseOffest = LocalToScreen(p->position) - mouse;
             }
             else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !hoveredPoint.has_value())
-                selectedPoint = {};
+                Deselect();
             else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && hoveredPoint.has_value()){
                 selectedPoint = hoveredPoint;
                 menu = ContextMenu{};
@@ -172,13 +252,11 @@ public:
 
             } else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && mouse.CheckCollision(innerBounds)){
                 CurveParameterPoint p;
-                p.position = ScreenToLocal(mouse);
+                p.position =  ScreenToLocal(mouse);
                 points.push_back(p);
             } else if(selectedPoint && IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
-
-                selectedPoint.value()->position = Vector2Clamp(ScreenToLocal(mouse+mouseOffest),{0,0}, {1,1});
+                selectedPoint.value()->position = Vector2Clamp(ScreenToLocal(mouse+mouseOffest), {0,0}, {1,1});
             }
-
         }
     }
 
@@ -205,6 +283,12 @@ public:
         return selectedPoint;
     }
 
+    void Deselect(){
+        selectedPoint = {};
+        rightControlSelected = false;
+        leftControlSelected = false;
+    }
+
 private:
     constexpr static const float margin = 4;
     ContextMenu menu;
@@ -212,6 +296,18 @@ private:
     raylib::Vector2 mouseOffest{0,0};
     std::vector<CurveParameterPoint> points;
     std::optional<CurveParameterPoint*> selectedPoint;
+    bool rightControlSelected = false;
+    bool leftControlSelected = false;
+
+    void DrawHermiteNormalized(raylib::Vector2 start, raylib::Vector2 end, float startTangent, float endTangent){
+        float scale = (end.x-start.x)/3.f;
+        raylib::Vector2 offset1{scale, scale*startTangent};
+        // negative endTangent => top part => need to invert value to calculate offset
+        raylib::Vector2 offset2{-scale, -scale*endTangent};
+        auto c1 = start + offset1;
+        auto c2 = end + offset2;
+        DrawLineBezierCubic(LocalToScreen(start),LocalToScreen(end), LocalToScreen(c1), LocalToScreen(c2), 1, BLACK);
+    }
 
     std::optional<CurveParameterPoint*> GetHoveredPoint(float fontsize) {
         raylib::Vector2 mouse{GetMousePosition()};
@@ -236,6 +332,14 @@ private:
         std::sort(sortedPoint.begin(), sortedPoint.end(), [](const CurveParameterPoint& p1, const CurveParameterPoint& p2){return p1.position.x < p2.position.x;});
         return std::move(sortedPoint);
     }
+
+    std::vector<CurveParameterPoint*> GetSortedPointsPtr(){
+        std::vector<CurveParameterPoint*> sortedPoint(points.size());
+        for(int i=0; i < points.size(); i++) sortedPoint[i] = &points[i];
+        std::sort(sortedPoint.begin(), sortedPoint.end(), [](const CurveParameterPoint* p1, const CurveParameterPoint* p2){return p1->position.x < p2->position.x;});
+        return std::move(sortedPoint);
+    }
+
 
 };
 

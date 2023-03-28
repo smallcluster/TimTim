@@ -29,10 +29,9 @@ struct AnimationData {
 
 struct CurveParameterPoint {
     raylib::Vector2 position{0,0};
-    float leftAngle{0};
-    float rightAngle{0};
-    bool leftLinear{false};
+    raylib::Vector2 tangents{0,0};
     bool rightLinear{false};
+    bool leftLinear{false};
 };
 
 // A curve to interpolate a float value form 0 to 1
@@ -64,9 +63,6 @@ public:
     static std::map<std::string, AnimationData> LoadAnimationsData(const std::string& path);
     // Helper to convert back the string representation of an ANIMATION_PLAYBACK value
     static ANIMATION_PLAYBACK ParsePlayback(const std::string& str);
-    static float Lerp(float t, float start, float end);
-    static raylib::Vector2 Lerp(float t, raylib::Vector2 start, raylib::Vector2 end);
-    static raylib::Vector2 Bezier(float t, raylib::Vector2 start, raylib::Vector2 control1, raylib::Vector2 control2, raylib::Vector2 end);
 private:
     Resource()= default;
 };
