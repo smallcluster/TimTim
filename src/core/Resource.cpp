@@ -72,6 +72,10 @@ void CurveParameter::SetData(std::vector<CurveParameterPoint> data) {
     points = std::move(data);
 }
 
+CurveParameter::CurveParameter(const std::string &path) {
+    LoadData(path);
+}
+
 float CurveParameter::Eval(float t) {
     // trivial cases
     if(points.empty())
@@ -118,6 +122,55 @@ float CurveParameter::Eval(float t) {
         }
     }
 }
+
+json CurveParameter::GetJsonRep() const {
+    json j;
+    j["data"] = json::array();
+    for(auto& p : points){
+        json d;
+        d["x"] = p.position.x;
+        d["y"] = p.position.y;
+        if(!p.leftLinear){
+            d["la"] = p.leftAngle;
+        }
+        if(!p.rightLinear){
+            d["ra"] = p.rightAngle;
+        }
+        j["data"].push_back(d);
+    }
+    return std::move(j);
+}
+
+void CurveParameter::SaveData(const std::string &path) const {
+    std::ofstream file(path);
+    file << GetJsonRep();
+}
+
+void CurveParameter::LoadData(const std::string &path) {
+    std::ifstream file(path);
+    json j = json::parse(file);
+    points.clear();
+    for(auto& d : j["data"]){
+        CurveParameterPoint p;
+        p.position.x = d["x"];
+        p.position.y = d["y"];
+        if(d.find("la") != d.end())
+            p.leftAngle = d["la"];
+        else
+            p.leftLinear = true;
+        if(d.find("ra") != d.end())
+            p.rightAngle = d["ra"];
+        else
+            p.rightLinear = true;
+        points.push_back(p);
+    }
+}
+
+std::vector<CurveParameterPoint> *CurveParameter::GetData() {
+    return &points;
+}
+
+
 
 
 

@@ -90,11 +90,11 @@ public:
         x = screenSize.x-16-width;
         y = 16;
         if(GuiButton({x,y,width, height}, "Load settings")){
-
+            curveEdit.LoadCurve("./data/curve.json");
         }
         y += dy+height;
         if(GuiButton({x,y,width, height}, "Save settings")){
-
+            curveEdit.SaveCurve("./data/curve.json");
         }
     }
     void SetScreenSize(int screenWidth, int screenHeight){

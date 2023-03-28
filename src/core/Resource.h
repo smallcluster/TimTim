@@ -9,6 +9,8 @@
 #include <vector>
 #include <map>
 #include <string>
+#include "nlohmann/json.hpp"
+using json = nlohmann::json;
 
 
 enum class ANIMATION_PLAYBACK {
@@ -38,11 +40,20 @@ class CurveParameter {
 public:
     CurveParameter() = default;
     CurveParameter(std::vector<CurveParameterPoint> data);
-    float Eval(float t);
+    CurveParameter(const std::string& path);
+
     void SetData(std::vector<CurveParameterPoint> data);
+    void SaveData(const std::string& path) const;
+    void LoadData(const std::string& path);
+
+    float Eval(float t);
+
+    std::vector<CurveParameterPoint>* GetData();
 private:
+    [[nodiscard]] json GetJsonRep() const;
     // points are sorted along x axis
     std::vector<CurveParameterPoint> points;
+
 };
 
 

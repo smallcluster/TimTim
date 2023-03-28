@@ -66,6 +66,8 @@ public:
         raylib::DrawText("0.5", x, y+innerBounds.height/2.f, fontsize, LIGHTGRAY);
         raylib::DrawText("1", x, y+fontsize, fontsize, LIGHTGRAY);
 
+        if(points.size() == 0)
+            return;
 
         // Draw Curve
         auto sortedPoint = GetSortedPoints();
@@ -74,7 +76,7 @@ public:
             auto p = sortedPoint[0];
             auto pos = LocalToScreen(p.position);
             DrawLine(innerBounds.x, pos.y, innerBounds.x+innerBounds.width, pos.y, BLACK);
-        }else{
+        }else {
             for(int i=0; i < sortedPoint.size()-1; i++){
                 const CurveParameterPoint& p1 = sortedPoint[i];
                 const CurveParameterPoint& p2 = sortedPoint[i+1];
@@ -106,7 +108,6 @@ public:
             }
         }
 
-        // Draw points
         for(auto& p : points){
 
             raylib::Vector2 screenPos = LocalToScreen(p.position);
@@ -181,13 +182,21 @@ public:
         return {GetSortedPoints()};
     }
 
+    void SaveCurve(const std::string& path) const{
+        GetCurveParameter().SaveData(path);
+    }
 
+    void LoadCurve(const std::string& path) {
+        CurveParameter c(path);
+        auto data = *c.GetData();
+        points = std::vector{data};
+        selectedPoint = {};
+    }
 
 private:
     constexpr static const float margin = 4;
     ContextMenu menu;
     raylib::Rectangle innerBounds;
-
 
     std::vector<CurveParameterPoint> points;
     std::optional<CurveParameterPoint*> selectedPoint;
@@ -202,6 +211,7 @@ private:
         }
         return {};
     }
+
     [[nodiscard]] raylib::Vector2 LocalToScreen(const raylib::Vector2& position) const {
         return {position.x*innerBounds.width+innerBounds.x, innerBounds.y+innerBounds.height-position.y*innerBounds.height};
     }
