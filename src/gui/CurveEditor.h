@@ -13,9 +13,13 @@
 #include <functional>
 #include <optional>
 #include <iostream>
+#include "fmt/format.h"
 
 class CurveEditor {
 public:
+
+    float min{-1};
+    float max{2};
 
     CurveEditor(){
         // Initial point
@@ -60,9 +64,14 @@ public:
         // H labels
         x = innerBounds.x;
         y = innerBounds.y-fontsize;
-        raylib::DrawText("0", x, y+innerBounds.height, fontsize, LIGHTGRAY);
-        raylib::DrawText("0.5", x, y+innerBounds.height/2.f, fontsize, LIGHTGRAY);
-        raylib::DrawText("1", x, y+fontsize, fontsize, LIGHTGRAY);
+
+        std::string minStr = fmt::format("{:.2f}", min);
+        std::string maxStr = fmt::format("{:.2f}", max);
+        std::string avgStr = fmt::format("{:.2f}", min + (max-min)/2.f);
+
+        raylib::DrawText(minStr, x, y+innerBounds.height, fontsize, LIGHTGRAY);
+        raylib::DrawText(avgStr, x, y+innerBounds.height/2.f, fontsize, LIGHTGRAY);
+        raylib::DrawText(maxStr, x, y+fontsize, fontsize, LIGHTGRAY);
 
         if(points.empty())
             return;
@@ -204,7 +213,6 @@ public:
 
                 if(mouse.CheckCollision({controlLeft.x-handleSize/2.f, controlLeft.y-handleSize/2.f, handleSize, handleSize})){
                     leftControlSelected = true;
-                    p->leftLinear = false;
                 }
 
                 // Right control
@@ -214,7 +222,6 @@ public:
 
                 if(mouse.CheckCollision({controlRight.x-handleSize/2.f, controlRight.y-handleSize/2.f, handleSize, handleSize})){
                     rightControlSelected = true;
-                    p->rightLinear = false;
                 }
             }
 
@@ -228,19 +235,32 @@ public:
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && rightControlSelected){
                 auto* p = selectedPoint.value();
                 auto dir = ScreenToLocal(mouse)-p->position;
+
                 p->tangents.y = dir.x < 0.001f ? dir.y/0.001f : dir.y/dir.x;
+                p->rightLinear = false;
+
+                if(!(IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))){
+                    p->tangents.x = p->tangents.y;
+                    p->leftLinear = false;
+                }
+
             } else if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && leftControlSelected){
                 auto* p = selectedPoint.value();
                 auto dir = ScreenToLocal(mouse)-p->position;
                 p->tangents.x = dir.x > -0.001f ? dir.y/(-0.001f) : dir.y/dir.x;
+                p->leftLinear = false;
+                if(!(IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))){
+                    p->tangents.y = p->tangents.x;
+                    p->rightLinear = false;
+                }
             } else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && hoveredPoint){
                 selectedPoint = hoveredPoint;
                 auto* p = selectedPoint.value();
                 mouseOffest = LocalToScreen(p->position) - mouse;
             }
-            else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !hoveredPoint.has_value())
+            else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !hoveredPoint.has_value() && mouse.CheckCollision(bounds))
                 Deselect();
-            else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && hoveredPoint.has_value()){
+            else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && hoveredPoint.has_value() && mouse.CheckCollision(bounds)){
                 selectedPoint = hoveredPoint;
                 menu = ContextMenu{};
                 menu.position = mouse;
@@ -254,14 +274,17 @@ public:
                 CurveParameterPoint p;
                 p.position =  ScreenToLocal(mouse);
                 points.push_back(p);
-            } else if(selectedPoint && IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
+            } else if(selectedPoint && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && mouse.CheckCollision(bounds) ){
                 selectedPoint.value()->position = Vector2Clamp(ScreenToLocal(mouse+mouseOffest), {0,0}, {1,1});
             }
         }
     }
 
     [[nodiscard]] CurveParameter GetCurveParameter() const {
-        return {GetSortedPoints()};
+        CurveParameter c{GetSortedPoints()};
+        c.min = min;
+        c.max = max;
+        return std::move(c);
     }
 
     void SaveCurve(const std::string& path) const{

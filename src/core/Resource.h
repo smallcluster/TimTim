@@ -37,6 +37,8 @@ struct CurveParameterPoint {
 // A curve to interpolate a float value form 0 to 1
 class CurveParameter {
 public:
+    float min{0};
+    float max{1};
     CurveParameter() = default;
     CurveParameter(std::vector<CurveParameterPoint> data);
     CurveParameter(const std::string& path);
@@ -46,13 +48,29 @@ public:
     void LoadData(const std::string& path);
 
     float Eval(float t);
-
     std::vector<CurveParameterPoint>* GetData();
 private:
     [[nodiscard]] json GetJsonRep() const;
     // points are sorted along x axis
     std::vector<CurveParameterPoint> points;
+};
 
+// ColorRamp
+class ColorRamp{
+public:
+    ColorRamp() = default;
+    ColorRamp(std::vector<std::pair<raylib::Color, float>> data);
+    ColorRamp(const std::string& path);
+
+    void SetData(std::vector<std::pair<raylib::Color, float>> data);
+    void SaveData(const std::string& path) const;
+    void LoadData(const std::string& path);
+
+    raylib::Color Eval(float t);
+    std::vector<std::pair<raylib::Color, float>>* GetData();
+private:
+    [[nodiscard]] json GetJsonRep() const;
+    std::vector<std::pair<raylib::Color, float>> colors;
 };
 
 

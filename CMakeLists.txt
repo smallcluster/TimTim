@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.24)
 project(timtim)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # raylib
 find_package(raylib QUIET)
@@ -49,6 +52,18 @@ if (NOT nlohmann_json_FOUND)
     FetchContent_MakeAvailable(nlohmann_json)
 endif()
 
+# FMT
+find_package(fmt QUIET)
+if (NOT fmt_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+            fmt
+            GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+            GIT_TAG 9.1.0
+    )
+    FetchContent_MakeAvailable(fmt)
+endif()
+
 
 # This is the main part:
 set(ENGINE_SRC
@@ -73,23 +88,24 @@ set(ENGINE_SRC
         src/gui/ContextMenu.cpp
         src/gui/ContextMenu.h
         src/gui/CurveEditor.cpp
-        src/gui/CurveEditor.h)
+        src/gui/CurveEditor.h
+        src/gui/ColorRampEditor.cpp
+        src/gui/ColorRampEditor.h
+        src/gui/ColorPopup.h
+        )
 
 set(GAME_SRC
         src/GameMap.h
         src/Player.h
-        src/main.cpp
-        )
+        src/main.cpp)
 
 # MAIN GAME
 add_executable(${PROJECT_NAME} ${ENGINE_SRC} ${GAME_SRC})
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
-target_link_libraries(${PROJECT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::nlohmann_json raylib-tileson)
+target_link_libraries(${PROJECT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::nlohmann_json raylib-tileson fmt::fmt)
 
 
 # Editor tools
 set(PARTICLE_EDIT_NAME PEdit)
 set(PARTICLE_EDITOR_SRC tools/particle_editor.cpp)
 add_executable(${PARTICLE_EDIT_NAME} ${ENGINE_SRC} ${PARTICLE_EDITOR_SRC})
-set_target_properties(${PARTICLE_EDIT_NAME} PROPERTIES CXX_STANDARD 20)
-target_link_libraries(${PARTICLE_EDIT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::nlohmann_json)
+target_link_libraries(${PARTICLE_EDIT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::nlohmann_json fmt::fmt)
