@@ -265,12 +265,13 @@ public:
                 auto* p = selectedPoint.value();
                 mouseOffest = LocalToScreen(p->position) - mouse;
             }
+            // Remove
             else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && hoveredPoint.has_value() && mouse.CheckCollision(bounds)){
                 if(points.size() > 1){
                     CurveParameterPoint* selected = hoveredPoint.value();
+                    Deselect();
                     auto it = std::find_if(points.begin(), points.end(), [selected](const CurveParameterPoint& p){return &p == selected;});
                     points.erase(it);
-                    Deselect();
 
                 }
             // add

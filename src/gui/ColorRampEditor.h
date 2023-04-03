@@ -148,10 +148,10 @@ public:
 
         // remove color
         if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && hoveredColor){
-            selectedColor = {};
             if(colors.size() == 1)
                 return;
             auto* selected = hoveredColor.value();
+            selectedColor = {};
             auto it = std::find_if(colors.begin(), colors.end(), [selected](const auto& p){return &p == selected;});
             colors.erase(it);
             return;
