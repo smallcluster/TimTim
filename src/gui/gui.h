@@ -8,8 +8,23 @@
 #include "raylib-cpp.hpp"
 #include "../external/raygui/raygui.h"
 #include "fmt/printf.h"
+#include <vector>
+#include <map>
+#include <filesystem>
 
 namespace gui{
+
+    std::map<std::string, std::string> FindThemes(const std::string& themeDir){
+        std::map<std::string, std::string> themes;
+        for(const auto& entry : std::filesystem::directory_iterator(themeDir)){
+            if(entry.path().extension() == ".rgs"){
+                themes[entry.path().stem().string()] = entry.path().string();
+            }
+        }
+        return themes;
+    }
+
+
     class ValueBox{
     public:
         raylib::Rectangle bounds;
@@ -42,7 +57,7 @@ namespace gui{
         raylib::Rectangle bounds;
         bool active = false;
         void Draw(const std::string& txt){
-            bounds.Draw(LIGHTGRAY);
+            GuiStatusBar(bounds, NULL);
             if(GuiLabelButton(bounds, GuiIconText(active ? ICON_ARROW_DOWN_FILL : ICON_ARROW_RIGHT_FILL, txt.c_str())))
                 active = !active;
         }

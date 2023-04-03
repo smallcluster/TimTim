@@ -38,27 +38,30 @@ public:
 
         BeginScissorMode(bounds.x, bounds.y, bounds.width, bounds.height);
         // Draw bg
-        bounds.Draw(WHITE);
+        raylib::Color bgColor = GuiGetStyle(DEFAULT, BACKGROUND_COLOR);
+        bounds.Draw(bgColor);
 
         // Draw grid
         // H lines
-        LocalToScreen({0,0}).DrawLine(LocalToScreen({1,0}), LIGHTGRAY); // top
-        LocalToScreen({0,1}).DrawLine(LocalToScreen({1,1}), LIGHTGRAY); // bottom
-        LocalToScreen({0,0.5}).DrawLine(LocalToScreen({1,0.5}), LIGHTGRAY); // middle
+        raylib::Color lineColor = GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL);
+
+        LocalToScreen({0,0}).DrawLine(LocalToScreen({1,0}), lineColor); // top
+        LocalToScreen({0,1}).DrawLine(LocalToScreen({1,1}), lineColor); // bottom
+        LocalToScreen({0,0.5}).DrawLine(LocalToScreen({1,0.5}), lineColor); // middle
         // V lines
-        LocalToScreen({0,0}).DrawLine(LocalToScreen({0,1}), LIGHTGRAY); // left
-        LocalToScreen({1,0}).DrawLine(LocalToScreen({1,1}), LIGHTGRAY); // right
-        LocalToScreen({0.5,0}).DrawLine(LocalToScreen({0.5,1}), LIGHTGRAY); // middle
-        LocalToScreen({0.25,0}).DrawLine(LocalToScreen({0.25,1}), LIGHTGRAY); // 0.25
-        LocalToScreen({0.75,0}).DrawLine(LocalToScreen({0.75,1}), LIGHTGRAY); // 0.75
+        LocalToScreen({0,0}).DrawLine(LocalToScreen({0,1}), lineColor); // left
+        LocalToScreen({1,0}).DrawLine(LocalToScreen({1,1}), lineColor); // right
+        LocalToScreen({0.5,0}).DrawLine(LocalToScreen({0.5,1}), lineColor); // middle
+        LocalToScreen({0.25,0}).DrawLine(LocalToScreen({0.25,1}), lineColor); // 0.25
+        LocalToScreen({0.75,0}).DrawLine(LocalToScreen({0.75,1}), lineColor); // 0.75
         // V labels
         float y = bounds.y+bounds.height-fontsize;
         float x = innerBounds.x;
-        raylib::DrawText("0", x, y, fontsize, LIGHTGRAY);
-        raylib::DrawText("0.25", x+innerBounds.width/4.f, y, fontsize, LIGHTGRAY);
-        raylib::DrawText("0.5", x+innerBounds.width/2.f, y, fontsize, LIGHTGRAY);
-        raylib::DrawText("0.75", x+3.f*innerBounds.width/4.f, y, fontsize, LIGHTGRAY);
-        raylib::DrawText("1", x+innerBounds.width, y, fontsize, LIGHTGRAY);
+        raylib::DrawText("0", x, y, fontsize, lineColor);
+        raylib::DrawText("0.25", x+innerBounds.width/4.f, y, fontsize, lineColor);
+        raylib::DrawText("0.5", x+innerBounds.width/2.f, y, fontsize, lineColor);
+        raylib::DrawText("0.75", x+3.f*innerBounds.width/4.f, y, fontsize, lineColor);
+        raylib::DrawText("1", x+innerBounds.width, y, fontsize, lineColor);
 
         // H labels
         x = innerBounds.x;
@@ -68,9 +71,9 @@ public:
         std::string maxStr = fmt::format("{:.2f}", max);
         std::string avgStr = fmt::format("{:.2f}", min + (max-min)/2.f);
 
-        raylib::DrawText(minStr, x, y+innerBounds.height, fontsize, LIGHTGRAY);
-        raylib::DrawText(avgStr, x, y+innerBounds.height/2.f, fontsize, LIGHTGRAY);
-        raylib::DrawText(maxStr, x, y+fontsize, fontsize, LIGHTGRAY);
+        raylib::DrawText(minStr, x, y+innerBounds.height, fontsize, lineColor);
+        raylib::DrawText(avgStr, x, y+innerBounds.height/2.f, fontsize, lineColor);
+        raylib::DrawText(maxStr, x, y+fontsize, fontsize, lineColor);
 
         if(points.empty())
             return;
@@ -95,13 +98,19 @@ public:
         }
 
         // Draw points
+        raylib::Color pointNormal = GuiGetStyle(BUTTON, BASE_COLOR_NORMAL);
+        raylib::Color pointFocused = GuiGetStyle(DEFAULT, BASE_COLOR_FOCUSED);
+        raylib::Color pointPressed = GuiGetStyle(DEFAULT, BASE_COLOR_PRESSED);
+
+        raylib::Color pointBorderNormal = GuiGetStyle(BUTTON, BORDER_COLOR_NORMAL);
+        raylib::Color pointBorderFocused = GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL);
+        raylib::Color pointBorderPressed = GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL);
         for(int i=0; i < sortedPoint.size(); i++){
             const auto* p = sortedPoint[i];
             raylib::Vector2 screenPos = LocalToScreen(p->position);
 
             // Draw point
             if(selectedPoint && selectedPoint.value() == p){
-                DrawRectangle(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, BLUE);
                 // Draw left handle
                 if(i > 0){
                     raylib::Vector2 controlOffset{-1, -p->tangents.x};
@@ -109,12 +118,20 @@ public:
                     auto dir = target - screenPos;
                     raylib::Vector2 control = screenPos + dir.Normalize() * handleLength;
                     raylib::Rectangle controlRect{control.x-handleSize/2.f, control.y-handleSize/2.f, handleSize, handleSize};
-                    if(mouse.CheckCollision(controlRect) || leftControlSelected){
-                        controlRect.Draw(BLUE);
-                        screenPos.DrawLine(control, BLUE);
+                    if(leftControlSelected){
+                        screenPos.DrawLine(control, pointBorderPressed);
+                        controlRect.Draw(pointPressed);
+                        controlRect.DrawLines(pointBorderPressed);
+                    } else if(mouse.CheckCollision(controlRect)){
+                        screenPos.DrawLine(control, pointBorderFocused);
+                        controlRect.Draw(pointFocused);
+                        controlRect.DrawLines(pointBorderFocused);
+
                     }else{
-                        controlRect.Draw(GRAY);
-                        screenPos.DrawLine(control, GRAY);
+                        screenPos.DrawLine(control, pointBorderNormal);
+                        controlRect.Draw(pointNormal);
+                        controlRect.DrawLines(pointBorderNormal);
+
                     }
 
                 }
@@ -125,28 +142,46 @@ public:
                     auto dir = target - screenPos;
                     raylib::Vector2 control = screenPos + dir.Normalize() * handleLength;
                     raylib::Rectangle controlRect{control.x-handleSize/2.f, control.y-handleSize/2.f, handleSize, handleSize};
-                    if(mouse.CheckCollision(controlRect) || leftControlSelected){
-                        controlRect.Draw(BLUE);
-                        screenPos.DrawLine(control, BLUE);
+                    if(rightControlSelected){
+                        screenPos.DrawLine(control, pointBorderPressed);
+                        controlRect.Draw(pointPressed);
+                        controlRect.DrawLines(pointBorderPressed);
+
+                    } else if(mouse.CheckCollision(controlRect)){
+                        screenPos.DrawLine(control, pointBorderFocused);
+                        controlRect.Draw(pointFocused);
+                        controlRect.DrawLines(pointBorderFocused);
+
                     }else{
-                        controlRect.Draw(GRAY);
-                        screenPos.DrawLine(control, GRAY);
+                        screenPos.DrawLine(control, pointBorderNormal);
+                        controlRect.Draw(pointNormal);
+                        controlRect.DrawLines(pointBorderNormal);
+
                     }
                 }
+                DrawRectangle(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, pointPressed);
+                DrawRectangleLines(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, pointBorderPressed);
+            } else if(hoveredPoint && hoveredPoint.value() == p) {
+                DrawRectangle(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, pointFocused);
+                DrawRectangleLines(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, pointBorderFocused);
             } else {
-                DrawRectangle(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, GRAY);
+                DrawRectangle(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, pointNormal);
+                DrawRectangleLines(screenPos.x-fontsize/2.f, screenPos.y-fontsize/2.f, fontsize, fontsize, pointBorderNormal);
             }
 
-            // point hover
-            if(hoveredPoint && hoveredPoint.value() == p)
-                DrawRectangleLines(screenPos.x-(fontsize+margin)/2.f, screenPos.y-(fontsize+margin)/2.f, fontsize+margin, fontsize+margin, BLACK);
+//            // point hover
+//            if(hoveredPoint && hoveredPoint.value() == p && (selectedPoint && selectedPoint.value() != p || !selectedPoint)){
+//                DrawRectangleLines(screenPos.x-(fontsize+margin)/2.f, screenPos.y-(fontsize+margin)/2.f, fontsize+margin, fontsize+margin, pointHover);
+//            }
+
         }
 
         // Draw Curve
+        raylib::Color curveColor = GuiGetStyle(LABEL,  TEXT_COLOR_FOCUSED);
         if(sortedPoint.size() == 1){
             auto* p = sortedPoint[0];
             auto pos = LocalToScreen(p->position);
-            DrawLine(innerBounds.x, pos.y, innerBounds.x+innerBounds.width, pos.y, BLACK);
+            DrawLine(innerBounds.x, pos.y, innerBounds.x+innerBounds.width, pos.y, curveColor);
         }else {
             for(int i=0; i < sortedPoint.size()-1; i++){
                 const CurveParameterPoint* p1 = sortedPoint[i];
@@ -155,19 +190,22 @@ public:
                 auto pos2 = LocalToScreen(p2->position);
                 // Constant on edge
                 if(pos1.x > innerBounds.x && i == 0){
-                    DrawLine(innerBounds.x, pos1.y, pos1.x, pos1.y, BLACK);
+                    DrawLine(innerBounds.x, pos1.y, pos1.x, pos1.y, curveColor);
                 }
                 if(pos2.x < innerBounds.x+innerBounds.width && i == sortedPoint.size()-2){
-                    DrawLine(pos2.x, pos2.y, innerBounds.x+innerBounds.width, pos2.y, BLACK);
+                    DrawLine(pos2.x, pos2.y, innerBounds.x+innerBounds.width, pos2.y, curveColor);
                 }
-                DrawHermiteNormalized(p1->position, p2->position, p1->tangents.y, p2->tangents.x);
+                DrawHermiteNormalized(p1->position, p2->position, p1->tangents.y, p2->tangents.x, curveColor);
             }
         }
 
         EndScissorMode();
 
         // Draw contours
-        bounds.DrawLines(GetColor(GuiGetStyle(DEFAULT, LINE_COLOR)));
+        if(mouse.CheckCollision(bounds))
+            bounds.DrawLines(GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED)));
+        else
+            bounds.DrawLines(GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL)));
 
             // Select handle
             if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && selectedPoint){
@@ -285,14 +323,14 @@ private:
     bool rightControlSelected = false;
     bool leftControlSelected = false;
 
-    void DrawHermiteNormalized(raylib::Vector2 start, raylib::Vector2 end, float startTangent, float endTangent){
+    void DrawHermiteNormalized(raylib::Vector2 start, raylib::Vector2 end, float startTangent, float endTangent, raylib::Color curveColor){
         float scale = (end.x-start.x)/3.f;
         raylib::Vector2 offset1{scale, scale*startTangent};
         // negative endTangent => top part => need to invert value to calculate offset
         raylib::Vector2 offset2{-scale, -scale*endTangent};
         auto c1 = start + offset1;
         auto c2 = end + offset2;
-        DrawLineBezierCubic(LocalToScreen(start),LocalToScreen(end), LocalToScreen(c1), LocalToScreen(c2), 1, BLACK);
+        DrawLineBezierCubic(LocalToScreen(start),LocalToScreen(end), LocalToScreen(c1), LocalToScreen(c2), 1, curveColor);
     }
 
     std::optional<CurveParameterPoint*> GetHoveredPoint(float fontsize) {

@@ -11,6 +11,8 @@
 #include <optional>
 
 
+
+
 //----------------------------------------------------------------------------------------------------------------------
 // EDITOR SCENE
 //----------------------------------------------------------------------------------------------------------------------
@@ -18,8 +20,6 @@ class Editor : public Scene {
 public:
     Editor() {
         GuiLoadStyleDefault();
-
-        GuiSetStyle(DEFAULT, TEXT_SIZE, 18);
 
         // Camera setup
         cam.offset = {0};
@@ -40,24 +40,26 @@ public:
         categories.emplace_back("Angle", false);
         categories.emplace_back("Scale", false);
         categories.emplace_back("Color", false);
+        themePaths.emplace_back("");
+        themeList = "default";
+
+        auto themeMap = gui::FindThemes("./data/Engine/GuiStyles/");
+        for(auto& p : themeMap){
+            themePaths.push_back(p.second);
+            themeList += ";"+p.first;
+        }
+
+        GuiLoadStyleDefault();
+        GuiSetStyle(DEFAULT, TEXT_SIZE, 18);
     }
     void Update(float delta) override {
         Scene::Update(delta);
     }
 
     void Draw() override{
-        ClearBackground(BLACK);
+        raylib::Color bgColor  = GuiGetStyle(DEFAULT, BACKGROUND_COLOR);
+        raylib::Color shadowColor(0, 0, 0, 50);
 
-        //SCENE
-        //--------------------------------------------------------------------------------------------------------------
-        cam.BeginMode();
-        DrawLine(-screenSize.x/2, 0, screenSize.x/2, 0, RED);
-        DrawLine(0, -screenSize.y/2,0, screenSize.y/2, GREEN);
-        Scene::Draw();
-        cam.EndMode();
-
-        // GUI
-        //--------------------------------------------------------------------------------------------------------------
 
         raylib::Vector2 mouse{GetMousePosition()};
         static float mainPanelSplitPos = 0.75f;
@@ -65,7 +67,6 @@ public:
         static raylib::Vector2 settingsScroll{0,0};
 
         // consts
-
         const float scrollBarWidth = GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH);
         const float fontSize = GuiGetStyle(DEFAULT, TEXT_SIZE);
         const float margin = fontSize/2.f;
@@ -77,6 +78,20 @@ public:
         const float evx = screenSize.x - margin - scrollBarWidth;
         const float elx = slx + (evx-slx) /2.f - margin;
         const float svx = slx + (evx-slx) /2.f + margin;
+
+        ClearBackground(bgColor);
+
+
+        //SCENE
+        //--------------------------------------------------------------------------------------------------------------
+        cam.BeginMode();
+        DrawLine(-screenSize.x/2, 0, screenSize.x/2, 0, RED);
+        DrawLine(0, -screenSize.y/2,0, screenSize.y/2, GREEN);
+        Scene::Draw();
+        cam.EndMode();
+
+        // GUI
+        //--------------------------------------------------------------------------------------------------------------
 
         // Setting window
         static bool showSetting = true;
@@ -97,17 +112,36 @@ public:
 
         // show settings
         const char* fileTxt = GuiIconText(showSetting ? ICON_EYE_ON : ICON_EYE_OFF, "Settings");
-        int dfileTxt = MeasureText(fileTxt, fontSize);
-        if(GuiButton({menuDx, sy, (float)dfileTxt, fontSize}, fileTxt)){
+        int dtxt = MeasureText(fileTxt, fontSize);
+        if(GuiButton({menuDx, sy, (float)dtxt, fontSize}, fileTxt)){
             showSetting = !showSetting;
         }
-        menuDx += margin;
+        menuDx += dtxt+margin;
+
+        // switch theme color
+        static int themeIndex = 0;
+        int choice = GuiComboBox({menuDx, sy, 128, fontSize}, themeList.c_str(), themeIndex);
+        if(choice != themeIndex){
+            themeIndex = choice;
+            if(themeIndex == 0){
+                GuiLoadStyleDefault();
+            } else {
+                GuiLoadStyle(themePaths[themeIndex].c_str());
+            }
+            GuiSetStyle(DEFAULT, TEXT_SIZE, std::max(18, GuiGetStyle(DEFAULT, TEXT_SIZE)));
+        }
+        menuDx += 128+margin;
+
+
         sy += menuBarHeight;
+        DrawRectangleGradientV(0,sy, screenSize.x, fontSize, shadowColor, BLANK);
 
 
         if(showSetting){
 
-            raylib::Rectangle mainPanel{sx, sy, screenSize.x-sx, screenSize.y};
+            DrawRectangleGradientH(sx-fontSize,sy, fontSize, screenSize.y-menuBarHeight, BLANK, shadowColor);
+
+            raylib::Rectangle mainPanel{sx, sy, screenSize.x-sx, screenSize.y-menuBarHeight};
             showSetting = !GuiWindowBox(mainPanel, "Settings");
             sy += RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT+margin;
 
@@ -124,11 +158,11 @@ public:
 
             // amount
             static int amount = 0;
-            GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize+valueBoxTextPadding*2}, "Amount");
+            GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize+valueBoxTextPadding}, "Amount");
             static gui::ValueBox amountBox;
-            amountBox.bounds = (Rectangle){svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding*2};
+            amountBox.bounds = (Rectangle){svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding};
             amountBox.Draw(&amount, 0, 10000);
-            sy += fontSize+margin+valueBoxTextPadding*2;
+            sy += fontSize+margin+valueBoxTextPadding;
 
             // Draw category
             for(int i=0; i < categories.size(); i++){
@@ -152,36 +186,36 @@ public:
                     case 0:{
 
                         // LifeTime
-                        GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize+valueBoxTextPadding*2}, "Life time");
+                        GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize+valueBoxTextPadding}, "Life time");
                         static gui::ValueSliderCombo lifeTimeVb;
-                        lifeTimeVb.bounds = (Rectangle){svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding*2+fontSize/2.f};
+                        lifeTimeVb.bounds = (Rectangle){svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         lifeTimeVb.sliderHeight = fontSize/2.f;
                         static int lifeTime = 1;
                         lifeTimeVb.Draw(&lifeTime, 0, 999);
                         sy += lifeTimeVb.bounds.height+margin;
 
                         // SpeedScale
-                        GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize+valueBoxTextPadding*2}, "Speed scale");
+                        GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize+valueBoxTextPadding}, "Speed scale");
                         static gui::ValueSliderCombo speedScaleVb;
-                        speedScaleVb.bounds = (Rectangle){svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding*2+fontSize/2.f};
+                        speedScaleVb.bounds = (Rectangle){svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         speedScaleVb.sliderHeight = fontSize/2.f;
                         static int speedScale = 1;
                         speedScaleVb.Draw(&speedScale, 0, 999);
                         sy += speedScaleVb.bounds.height+margin;
 
                         // explosiveness
-                        GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize+valueBoxTextPadding*2}, "Explosiveness");
+                        GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize+valueBoxTextPadding}, "Explosiveness");
                         static gui::ValueSliderCombo explosivenessVb;
-                        explosivenessVb.bounds = (Rectangle){svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding*2+fontSize/2.f};
+                        explosivenessVb.bounds = (Rectangle){svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         explosivenessVb.sliderHeight = fontSize/2.f;
                         static int explosiveness = 1;
                         explosivenessVb.Draw(&explosiveness, 0, 999);
                         sy += explosivenessVb.bounds.height+margin;
 
                         // life time randomness
-                        GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize+valueBoxTextPadding*2}, "Life time rand");
+                        GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize+valueBoxTextPadding}, "Life time rand");
                         static gui::ValueSliderCombo lifeTimeRandVb;
-                        lifeTimeRandVb.bounds = (Rectangle){svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding*2+fontSize/2.f};
+                        lifeTimeRandVb.bounds = (Rectangle){svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         lifeTimeRandVb.sliderHeight = fontSize/2.f;
                         static int lifeTimeRand = 1;
                         lifeTimeRandVb.Draw(&lifeTimeRand, 0, 999);
@@ -245,11 +279,11 @@ public:
                         GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "direction");
                         static int dirx = 0;
                         static gui::ValueBox dirxVb;
-                        dirxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                        dirxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                         dirxVb.Draw(&dirx, 0, 1);
                         static int diry = 0;
                         static gui::ValueBox diryVb;
-                        diryVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                        diryVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                         diryVb.Draw(&diry, 0, 1);
                         sy += diryVb.bounds.height + margin;
 
@@ -257,7 +291,7 @@ public:
                         GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Spread");
                         static int spread = 0;
                         static gui::ValueSliderCombo spreadVB;
-                        spreadVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+2*valueBoxTextPadding+fontSize/2.f};
+                        spreadVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         spreadVB.sliderHeight = fontSize/2.f;
                         spreadVB.Draw(&spread, 0, 180);
                         sy += spreadVB.bounds.height+margin;
@@ -270,11 +304,11 @@ public:
                         GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Gravity");
                         static int gravx = 0;
                         static gui::ValueBox gravxVb;
-                        gravxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                        gravxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                         gravxVb.Draw(&gravx, 0, 1);
                         static int gravy = 0;
                         static gui::ValueBox gravyVb;
-                        gravyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                        gravyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                         gravyVb.Draw(&gravy, 0, 1);
                         sy += gravyVb.bounds.height + margin;
 
@@ -286,7 +320,7 @@ public:
                         GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Initial min");
                         static int velMin = 0;
                         static gui::ValueSliderCombo velMinVB;
-                        velMinVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+2*valueBoxTextPadding+fontSize/2.f};
+                        velMinVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         velMinVB.sliderHeight = fontSize/2.f;
                         velMinVB.Draw(&velMin, 0, 180);
                         sy += velMinVB.bounds.height+margin;
@@ -294,7 +328,7 @@ public:
                         GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Initial max");
                         static int velMax = 0;
                         static gui::ValueSliderCombo velMaxVB;
-                        velMaxVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+2*valueBoxTextPadding+fontSize/2.f};
+                        velMaxVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         velMaxVB.sliderHeight = fontSize/2.f;
                         velMaxVB.Draw(&velMax, 0, 180);
                         sy += velMaxVB.bounds.height+margin;
@@ -306,7 +340,7 @@ public:
                         GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Initial min");
                         static int velAngMin = 0;
                         static gui::ValueSliderCombo velAngMinVB;
-                        velAngMinVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+2*valueBoxTextPadding+fontSize/2.f};
+                        velAngMinVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         velAngMinVB.sliderHeight = fontSize/2.f;
                         velAngMinVB.Draw(&velAngMin, 0, 180);
                         sy += velAngMinVB.bounds.height+margin;
@@ -314,7 +348,7 @@ public:
                         GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Initial max");
                         static int velAngMax = 0;
                         static gui::ValueSliderCombo velAngMaxVB;
-                        velAngMaxVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+2*valueBoxTextPadding+fontSize/2.f};
+                        velAngMaxVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         velAngMaxVB.sliderHeight = fontSize/2.f;
                         velAngMaxVB.Draw(&velAngMax, 0, 180);
                         sy += velAngMaxVB.bounds.height+margin;
@@ -339,11 +373,11 @@ public:
                                 GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Position");
                                 static int curvePosx = 0;
                                 static gui::ValueBox curvePosxVb;
-                                curvePosxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curvePosxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curvePosxVb.Draw(&curvePosx, 0, 1);
                                 static int curvePosy = 0;
                                 static gui::ValueBox curvePosyVb;
-                                curvePosyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curvePosyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curvePosyVb.Draw(&curvePosy, 0, 1);
                                 sy += curvePosyVb.bounds.height + margin;
 
@@ -351,11 +385,11 @@ public:
                                 GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Tangents");
                                 static int curveTanx = 0;
                                 static gui::ValueBox curveTanxVb;
-                                curveTanxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curveTanxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curveTanxVb.Draw(&curveTanx, 0, 1);
                                 static int curveTany = 0;
                                 static gui::ValueBox curveTanyVb;
-                                curveTanyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curveTanyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curveTanyVb.Draw(&curveTany, 0, 1);
                                 sy += curveTanyVb.bounds.height + margin;
 
@@ -384,11 +418,11 @@ public:
                         GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Damping");
                         static int dampingx = 0;
                         static gui::ValueBox dampingxVb;
-                        dampingxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                        dampingxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                         dampingxVb.Draw(&dampingx, 0, 1);
                         static int dampingy = 0;
                         static gui::ValueBox dampingyVb;
-                        dampingyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                        dampingyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                         dampingyVb.Draw(&dampingy, 0, 1);
                         sy += dampingyVb.bounds.height + margin;
 
@@ -412,11 +446,11 @@ public:
                                 GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Position");
                                 static int curvePosx = 0;
                                 static gui::ValueBox curvePosxVb;
-                                curvePosxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curvePosxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curvePosxVb.Draw(&curvePosx, 0, 1);
                                 static int curvePosy = 0;
                                 static gui::ValueBox curvePosyVb;
-                                curvePosyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curvePosyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curvePosyVb.Draw(&curvePosy, 0, 1);
                                 sy += curvePosyVb.bounds.height + margin;
 
@@ -424,11 +458,11 @@ public:
                                 GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Tangents");
                                 static int curveTanx = 0;
                                 static gui::ValueBox curveTanxVb;
-                                curveTanxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curveTanxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curveTanxVb.Draw(&curveTanx, 0, 1);
                                 static int curveTany = 0;
                                 static gui::ValueBox curveTanyVb;
-                                curveTanyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curveTanyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curveTanyVb.Draw(&curveTany, 0, 1);
                                 sy += curveTanyVb.bounds.height + margin;
 
@@ -454,7 +488,7 @@ public:
                         GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Initial min");
                         static int AngMin = 0;
                         static gui::ValueSliderCombo angMinVB;
-                        angMinVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+2*valueBoxTextPadding+fontSize/2.f};
+                        angMinVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         angMinVB.sliderHeight = fontSize/2.f;
                         angMinVB.Draw(&AngMin, 0, 180);
                         sy += angMinVB.bounds.height+margin;
@@ -462,7 +496,7 @@ public:
                         GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Initial max");
                         static int aAngMax = 0;
                         static gui::ValueSliderCombo angMaxVB;
-                        angMaxVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+2*valueBoxTextPadding+fontSize/2.f};
+                        angMaxVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         angMaxVB.sliderHeight = fontSize/2.f;
                         angMaxVB.Draw(&aAngMax, 0, 180);
                         sy += angMaxVB.bounds.height+margin;
@@ -487,11 +521,11 @@ public:
                                 GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Position");
                                 static int curvePosx = 0;
                                 static gui::ValueBox curvePosxVb;
-                                curvePosxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curvePosxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curvePosxVb.Draw(&curvePosx, 0, 1);
                                 static int curvePosy = 0;
                                 static gui::ValueBox curvePosyVb;
-                                curvePosyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curvePosyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curvePosyVb.Draw(&curvePosy, 0, 1);
                                 sy += curvePosyVb.bounds.height + margin;
 
@@ -499,11 +533,11 @@ public:
                                 GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Tangents");
                                 static int curveTanx = 0;
                                 static gui::ValueBox curveTanxVb;
-                                curveTanxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curveTanxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curveTanxVb.Draw(&curveTanx, 0, 1);
                                 static int curveTany = 0;
                                 static gui::ValueBox curveTanyVb;
-                                curveTanyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curveTanyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curveTanyVb.Draw(&curveTany, 0, 1);
                                 sy += curveTanyVb.bounds.height + margin;
 
@@ -529,7 +563,7 @@ public:
                         GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Initial min");
                         static int scaleMin = 0;
                         static gui::ValueSliderCombo scaleMinVB;
-                        scaleMinVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+2*valueBoxTextPadding+fontSize/2.f};
+                        scaleMinVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         scaleMinVB.sliderHeight = fontSize/2.f;
                         scaleMinVB.Draw(&scaleMin, 0, 180);
                         sy += scaleMinVB.bounds.height+margin;
@@ -537,7 +571,7 @@ public:
                         GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Initial max");
                         static int scaleMax = 0;
                         static gui::ValueSliderCombo scaleMaxVB;
-                        scaleMaxVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+2*valueBoxTextPadding+fontSize/2.f};
+                        scaleMaxVB.bounds = (Rectangle) {svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding+fontSize/2.f};
                         scaleMaxVB.sliderHeight = fontSize/2.f;
                         scaleMaxVB.Draw(&scaleMax, 0, 180);
                         sy += scaleMaxVB.bounds.height+margin;
@@ -562,11 +596,11 @@ public:
                                 GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Position");
                                 static int curvePosx = 0;
                                 static gui::ValueBox curvePosxVb;
-                                curvePosxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curvePosxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curvePosxVb.Draw(&curvePosx, 0, 1);
                                 static int curvePosy = 0;
                                 static gui::ValueBox curvePosyVb;
-                                curvePosyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curvePosyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curvePosyVb.Draw(&curvePosy, 0, 1);
                                 sy += curvePosyVb.bounds.height + margin;
 
@@ -574,11 +608,11 @@ public:
                                 GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Tangents");
                                 static int curveTanx = 0;
                                 static gui::ValueBox curveTanxVb;
-                                curveTanxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curveTanxVb.bounds = (Rectangle) {svx, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curveTanxVb.Draw(&curveTanx, 0, 1);
                                 static int curveTany = 0;
                                 static gui::ValueBox curveTanyVb;
-                                curveTanyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+2*valueBoxTextPadding};
+                                curveTanyVb.bounds = (Rectangle) {svx+(evx-svx+margin)/2.f, sy+settingsScroll.y, (evx-svx-margin)/2.f, fontSize+valueBoxTextPadding};
                                 curveTanyVb.Draw(&curveTany, 0, 1);
                                 sy += curveTanyVb.bounds.height + margin;
 
@@ -610,12 +644,12 @@ public:
                             static raylib::Color basecolor{255,0,0, 200};
                             GuiLabel({slx, sy+settingsScroll.y, elx-slx, fontSize}, "Color");
                             gui::ColorButton b;
-                            b.bounds = (Rectangle){svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding*2};
+                            b.bounds = (Rectangle){svx, sy+settingsScroll.y, evx-svx, fontSize+valueBoxTextPadding};
 
                             if(b.Draw(basecolor)){
                                 // Display popup color
                             }
-                            sy += fontSize + valueBoxTextPadding*2 + margin;
+                            sy += fontSize + valueBoxTextPadding + margin;
                             if(GuiButton({slx, sy+settingsScroll.y, evx-slx, fontSize}, "Use gradient")){
                                 ColorRampEditor c;
                                 colorRamp = {c};
@@ -648,18 +682,28 @@ public:
             // Split control
             raylib::Rectangle splitControl{screenSize.x*mainPanelSplitPos-mainSplitWidth/2.f, menuBarHeight, mainSplitWidth, screenSize.y};
 
-            if(mouse.CheckCollision(splitControl) && GuiGetState() != STATE_DISABLED){
-                splitControl.Draw(mouse.CheckCollision(splitControl) && GuiGetState() != STATE_DISABLED ? BLUE : GRAY);
-            }
             // Split plane movement
             static bool moveSplit = false;
+
+            if(GuiGetState() == STATE_DISABLED){
+                raylib::Color c = GuiGetStyle(DEFAULT, BASE_COLOR_DISABLED);
+                splitControl.Draw(c);
+                return;
+            }else if(moveSplit){
+                raylib::Color c = GuiGetStyle(DEFAULT, BASE_COLOR_PRESSED);
+                splitControl.Draw(c);
+            } else if(mouse.CheckCollision(splitControl)){
+                raylib::Color c = GuiGetStyle(DEFAULT, BASE_COLOR_FOCUSED);
+                splitControl.Draw(c);
+            }
+
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && mouse.CheckCollision(splitControl)){
                 moveSplit = true;
             }
             if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && moveSplit){
                 moveSplit = false;
             }
-            if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && moveSplit && GuiGetState() != STATE_DISABLED){
+            if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && moveSplit){
                 mainPanelSplitPos = std::clamp(mouse.x, 0.f, screenSize.x-300) / screenSize.x;
             }
         }
@@ -669,12 +713,15 @@ public:
         screenSize.x = screenWidth;
         screenSize.y = screenHeight;
         cam.offset = {screenWidth / 2.f, screenHeight / 2.f};
+
     }
 private:
     raylib::Camera2D cam;
     raylib::Vector2 screenSize;
 
     // GUI STATES
+    std::vector<std::string> themePaths;
+    std::string themeList;
     std::vector<std::pair<std::string, bool>> categories;
 
 };

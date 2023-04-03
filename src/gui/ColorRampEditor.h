@@ -6,6 +6,7 @@
 #define TIMTIM_COLORRAMPEDITOR_H
 
 #include "raylib-cpp.hpp"
+#include "../external/raygui/raygui.h"
 #include "../core/Resource.h"
 #include <vector>
 #include <algorithm>
@@ -34,7 +35,7 @@ public:
 
     void DrawAndUpdate(raylib::Rectangle bounds, float fontSize){
         raylib::Vector2 mouse{GetMousePosition()};
-        innerBounds = raylib::Rectangle{bounds.x, bounds.y, bounds.width-bounds.height-fontSize, bounds.height};
+        innerBounds = raylib::Rectangle{bounds.x+fontSize/2.f, bounds.y, bounds.width-bounds.height-fontSize-fontSize/2.f, bounds.height};
         raylib::Rectangle colorPreview{bounds.x+bounds.width-bounds.height, bounds.y, bounds.height, bounds.height};
 
         // DrawCheckers
@@ -50,17 +51,16 @@ public:
             DrawLine(colorPreview.x, colorPreview.y, colorPreview.x+colorPreview.width, colorPreview.y+colorPreview.height, BLACK);
             DrawLine(colorPreview.x, colorPreview.y+colorPreview.height, colorPreview.x+colorPreview.width, colorPreview.y, BLACK);
         }
-        if(colorPreview.CheckCollision(mouse) && selectedColor || showColorPopup){
-            colorPreview.DrawLines(BLUE);
-        } else {
-            colorPreview.DrawLines(BLACK);
-        }
+
+        if(colorPreview.CheckCollision(mouse) && selectedColor || showColorPopup)
+            colorPreview.DrawLines(GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED)));
+        else
+            colorPreview.DrawLines(GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL)));
 
 
         auto sortedColors = GetSortedColorsPtr();
 
         // Draw Color gradient
-
         if(sortedColors.size() == 1){
             auto c = sortedColors[0]->first;
             innerBounds.Draw(c);
@@ -87,19 +87,24 @@ public:
             }
         }
 
-        // Draw inner bounds lines
-        if(mouse.CheckCollision(innerBounds)){
-            innerBounds.DrawLines(BLUE);
-        } else {
-            innerBounds.DrawLines(BLACK);
-        }
+        // Draw innerBounds contours
+        if(mouse.CheckCollision(innerBounds))
+            innerBounds.DrawLines(GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED)));
+        else
+            innerBounds.DrawLines(GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL)));
 
         // Draw color handles
         for(auto* p : sortedColors){
             float x = LocalToScreen(p->second);
             raylib::Rectangle rect{x-fontSize/2.f, innerBounds.y+innerBounds.height/2.f, fontSize, innerBounds.height/2.f};
             rect.Draw(p->first);
-            raylib::Color c = selectedColor && selectedColor.value() == p || mouse.CheckCollision(rect) ? BLUE : BLACK;
+            raylib::Color c;
+            if(selectedColor && selectedColor.value() == p)
+                c = GuiGetStyle(BUTTON, BORDER_COLOR_PRESSED);
+            else if(mouse.CheckCollision(rect))
+                c = GuiGetStyle(BUTTON, BORDER_COLOR_FOCUSED);
+            else
+                c = GuiGetStyle(BUTTON, BORDER_COLOR_NORMAL);
             rect.DrawLines(c);
             DrawLine(x, innerBounds.y+innerBounds.height/2.f, x, innerBounds.y, c);
         }
