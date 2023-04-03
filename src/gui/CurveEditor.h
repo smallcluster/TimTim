@@ -8,7 +8,6 @@
 #include "raylib-cpp.hpp"
 #include "../external/raygui/raygui.h"
 #include "../core/Resource.h"
-#include "ContextMenu.h"
 #include <vector>
 #include <functional>
 #include <optional>
@@ -18,8 +17,8 @@
 class CurveEditor {
 public:
 
-    float min{-1};
-    float max{2};
+    float min{0};
+    float max{1};
 
     CurveEditor(){
         // Initial point
@@ -167,38 +166,8 @@ public:
 
         EndScissorMode();
 
-
-        //Draw Menu && update choice
-        if(menu.IsVisible()){
-            menu.DrawAndUpdate(fontsize);
-            auto item = menu.GetSelected();
-            if(item){
-                switch (item.value()->index+(points.size() == 1)) {
-                    case 0:{
-                        menu.Hide();
-                        if(points.size() > 1){
-                            CurveParameterPoint* selected = selectedPoint.value();
-                            auto it = std::find_if(points.begin(), points.end(), [selected](const CurveParameterPoint& p){return &p == selected;});
-                            points.erase(it);
-                            selectedPoint = {};
-                        }
-                        break;
-                    }
-                    case 1:{
-                        selectedPoint.value()->rightLinear = item.value()->checked;
-                        break;
-                    }
-                    case 2:{
-                        selectedPoint.value()->leftLinear = item.value()->checked;
-                        break;
-                    }
-                }
-            }
-        }
-
-
-        // Close/open menu
-        if(!menu.IsVisible()){
+        // Draw contours
+        bounds.DrawLines(GetColor(GuiGetStyle(DEFAULT, LINE_COLOR)));
 
             // Select handle
             if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && selectedPoint){
@@ -258,26 +227,24 @@ public:
                 auto* p = selectedPoint.value();
                 mouseOffest = LocalToScreen(p->position) - mouse;
             }
-            else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !hoveredPoint.has_value() && mouse.CheckCollision(bounds))
-                Deselect();
             else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && hoveredPoint.has_value() && mouse.CheckCollision(bounds)){
-                selectedPoint = hoveredPoint;
-                menu = ContextMenu{};
-                menu.position = mouse;
-                if(points.size() > 1)
-                    menu.AddItem("Remove");
-                menu.AddItem("Right linear", true, selectedPoint.value()->rightLinear);
-                menu.AddItem("Left linear", true, selectedPoint.value()->leftLinear);
-                menu.Show();
+                if(points.size() > 1){
+                    CurveParameterPoint* selected = hoveredPoint.value();
+                    auto it = std::find_if(points.begin(), points.end(), [selected](const CurveParameterPoint& p){return &p == selected;});
+                    points.erase(it);
+                    Deselect();
 
-            } else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && mouse.CheckCollision(innerBounds)){
+                }
+            // add
+            } else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && mouse.CheckCollision(innerBounds)){
+                Deselect();
                 CurveParameterPoint p;
                 p.position =  ScreenToLocal(mouse);
                 points.push_back(p);
+                selectedPoint = {&points[points.size()-1]};
             } else if(selectedPoint && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && mouse.CheckCollision(bounds) ){
                 selectedPoint.value()->position = Vector2Clamp(ScreenToLocal(mouse+mouseOffest), {0,0}, {1,1});
             }
-        }
     }
 
     [[nodiscard]] CurveParameter GetCurveParameter() const {
@@ -298,9 +265,6 @@ public:
         selectedPoint = {};
     }
 
-    [[nodiscard]] bool IsMenuVisible() const {
-        return menu.IsVisible();
-    }
 
     auto GetSelectedPoint(){
         return selectedPoint;
@@ -314,7 +278,6 @@ public:
 
 private:
     constexpr static const float margin = 4;
-    ContextMenu menu;
     raylib::Rectangle innerBounds;
     raylib::Vector2 mouseOffest{0,0};
     std::vector<CurveParameterPoint> points;

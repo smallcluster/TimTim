@@ -1,3 +1,4 @@
+#define RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT 24
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 

@@ -71,6 +71,7 @@ set(ENGINE_SRC
         src/external/raygui/raygui.h
         src/external/raygui/raygui.cpp
 
+
         # CORE
         src/core/Scene.cpp
         src/core/Scene.h
@@ -92,7 +93,8 @@ set(ENGINE_SRC
         src/gui/ColorRampEditor.cpp
         src/gui/ColorRampEditor.h
         src/gui/ColorPopup.h
-        )
+
+        src/gui/gui.h)
 
 set(GAME_SRC
         src/GameMap.h
