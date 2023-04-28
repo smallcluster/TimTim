@@ -26,7 +26,6 @@ struct AnimationData {
 };
 
 
-
 struct CurveParameterPoint {
     raylib::Vector2 position{0,0};
     raylib::Vector2 tangents{0,0};

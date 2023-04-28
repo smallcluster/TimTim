@@ -548,7 +548,6 @@ public:
                                 angCurveRightLinear = GuiCheckBox({svx, sy+settingsScroll.y, fontSize+checkBoxTextPadding, fontSize+checkBoxTextPadding}, "Right linear", angCurveRightLinear);
                                 sy += fontSize + checkBoxTextPadding+margin;
                             }
-
                         } else {
                             if(GuiButton({slx, sy+settingsScroll.y, evx-slx, fontSize}, "Use curve")){
                                 CurveEditor c;

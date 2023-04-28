@@ -5,25 +5,32 @@
 #include "sprite.h"
 
 #include <iostream>
+#include <utility>
 
 //----------------------------------------------------------------------------------------------------------------------
 // CLASS: sprite
 //----------------------------------------------------------------------------------------------------------------------
 Sprite::Sprite(std::shared_ptr<raylib::Texture2D> texture) : texture(std::move(texture)) {}
-void Sprite::Draw(){
-    raylib::Vector2 positiveScale(std::abs(scale.x), std::abs(scale.y));
+void Sprite::Draw(const Transform2D& parentGlobalTransform){
+    Transform2D gTransform = parentGlobalTransform * transform;
+    raylib::Vector2 positiveScale(std::abs(gTransform.scale.x), std::abs(gTransform.scale.y));
     raylib::Vector2 offset(texture->width / 2.0f, texture->height / 2.0f);
     offset *= positiveScale;
 
-    float srcWidth = scale.x < 0 ? -texture->width : texture->width;
-    float srcHeight = scale.y < 0 ? -texture->height : texture->height;
+    float srcWidth = gTransform.scale.x < 0 ? -texture->width : texture->width;
+    float srcHeight = gTransform.scale.y < 0 ? -texture->height : texture->height;
 
     raylib::Rectangle src(0,0, srcWidth, srcHeight);
-    raylib::Rectangle dest(position.x, position.y, texture->width * positiveScale.x, texture->height * positiveScale.y);
-    texture->Draw(src, dest, offset, rotation);
+    raylib::Rectangle dest(gTransform.position.x, gTransform.position.y, texture->width * positiveScale.x, texture->height * positiveScale.y);
+    texture->Draw(src, dest, offset, gTransform.rotation);
+
+    GameObject::Draw(parentGlobalTransform);
 }
 int Sprite::GetWidth(){return  texture->width;}
 int Sprite::GetHeight(){return  texture->height;}
+void Sprite::SetTexture(std::shared_ptr<raylib::Texture2D> texture){
+    this->texture = std::move(texture);
+}
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -61,19 +68,22 @@ void AnimatedSprite::Update(float delta) {
     }
 }
 
-void AnimatedSprite::Draw() {
+void AnimatedSprite::Draw(const Transform2D& parentGlobalTransform) {
+    Transform2D gTransform = parentGlobalTransform * transform;
     int index = std::round(timer);
     raylib::Rectangle& rect = frames[index];
-    raylib::Vector2 positiveScale(std::abs(scale.x), std::abs(scale.y));
+    raylib::Vector2 positiveScale(std::abs(gTransform.scale.x), std::abs(gTransform.scale.y));
     raylib::Vector2 offset(rect.width/2, rect.height/2);
     offset *= positiveScale;
 
-    float srcWidth = scale.x < 0 ? -rect.width : rect.width;
-    float srcHeight = scale.y < 0 ? -rect.height : rect.height;
+    float srcWidth = gTransform.scale.x < 0 ? -rect.width : rect.width;
+    float srcHeight = gTransform.scale.y < 0 ? -rect.height : rect.height;
 
     raylib::Rectangle src(rect.x,rect.y, srcWidth, srcHeight);
-    raylib::Rectangle dest(position.x, position.y, rect.width*positiveScale.x, rect.width*positiveScale.y);
-    texture->Draw(src, dest, offset, rotation);
+    raylib::Rectangle dest(gTransform.position.x, gTransform.position.y, rect.width*positiveScale.x, rect.width*positiveScale.y);
+    texture->Draw(src, dest, offset, gTransform.rotation);
+
+    GameObject::Draw(parentGlobalTransform);
 }
 
 void AnimatedSprite::SetFrames(std::vector<raylib::Rectangle> frames){
@@ -82,4 +92,18 @@ void AnimatedSprite::SetFrames(std::vector<raylib::Rectangle> frames){
 
 void AnimatedSprite::StartAt(float t){
     timer = Clamp((frames.size() - 1) * t, 0, (frames.size() - 1));
+}
+
+bool AnimatedSprite::Finished() {
+    if(playback != ANIMATION_PLAYBACK::ONCE)
+        return false;
+    if(reverse)
+        return timer == 0;
+    return timer == frames.size() - 1;
+}
+
+void AnimatedSprite::SetAnimData(const AnimationData& animData) {
+    frames = animData.frames;
+    playback = animData.playback;
+    framerate = animData.framerate;
 }

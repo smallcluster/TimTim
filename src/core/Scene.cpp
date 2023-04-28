@@ -5,18 +5,14 @@
 #include "Scene.h"
 
 void Scene::Update(float delta) {
-    for(auto& obj : gameObjects){
-        obj->Update(delta);
-    }
+    root.Update(delta);
 }
 
 void Scene::Draw() {
-    for(auto& obj : gameObjects){
-        obj->Draw();
-    }
+    root.Draw(Transform2D::Identity());
 }
 
-void Scene::RegisterGameObject(std::shared_ptr<GameObject> obj) {
-    gameObjects.push_back(obj);
+GameObject* Scene::GetRoot(){
+    return &root;
 }
 

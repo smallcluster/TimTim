@@ -33,8 +33,11 @@ public:
         return height;
     }
 
-    void Draw() override {
-        DrawTiled(map, 0, 0, WHITE);
+    void Draw(const Transform2D& parentGlobalTransform) override {
+        const Transform2D gTransform = parentGlobalTransform * transform;
+        DrawTiled(map, gTransform.position.x, gTransform.position.y, WHITE);
+
+        GameObject::Draw(parentGlobalTransform);
     }
 };
 

@@ -17,10 +17,10 @@ class Scene {
 public:
     virtual void Update(float delta);
     virtual void Draw();
-    void RegisterGameObject(std::shared_ptr<GameObject> obj);
+    GameObject* GetRoot();
 
 private:
-    std::vector<std::shared_ptr<GameObject>> gameObjects;
+    GameObject root;
 };
 
 #endif //TIMTIM_SCENE_H

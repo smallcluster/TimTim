@@ -15,8 +15,10 @@
 // Supports positive/negative (flip) scaling & rotations
 class Sprite : public GameObject {
 public:
-    Sprite(std::shared_ptr<raylib::Texture2D> texture);
-    void Draw() override;
+    explicit Sprite(std::shared_ptr<raylib::Texture2D> texture);
+    void Draw(const Transform2D& parentGlobalTransform) override;
+
+    void SetTexture(std::shared_ptr<raylib::Texture2D> texture);
 
     int GetWidth();
     int GetHeight();
@@ -34,12 +36,12 @@ public:
     float framerate = 0;
     ANIMATION_PLAYBACK playback = ANIMATION_PLAYBACK::LOOP;
 
-    AnimatedSprite();
-
     AnimatedSprite(std::shared_ptr<raylib::Texture2D> texture, AnimationData animData);
     void Update(float delta) override;
-    void Draw() override;
+    void Draw(const Transform2D& parentGlobalTransform) override;
     void StartAt(float t);
+
+    void SetAnimData(const AnimationData& animData);
 
     void SetFrames(std::vector<raylib::Rectangle> frames);
     bool Finished();

@@ -82,8 +82,8 @@ set(ENGINE_SRC
         # RENDERING
         src/render/sprite.cpp
         src/render/sprite.h
-        src/render/particles.cpp
-        src/render/particles.h
+        #src/render/particles.cpp
+        #src/render/particles.h
 
         # GUI Widget
         src/gui/ContextMenu.cpp

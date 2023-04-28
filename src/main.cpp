@@ -24,13 +24,13 @@ public:
 
         // -- register gameobjects --
         // Update & drawing from back to front
-        RegisterGameObject(map);
-        RegisterGameObject(player);
-
+        GetRoot()->AddChild(map);
+        GetRoot()->AddChild(player);
     }
 
     void Update(float delta) override {
-        cam.target = player->position;
+        cam.target = player->GetGlobalTransform().position;
+
         Scene::Update(delta);
     }
 

@@ -17,45 +17,56 @@ class Player : public GameObject{
 
 public:
     Player(){
+
         // Load animations
         std::shared_ptr<raylib::Texture2D> texture = std::make_shared<raylib::Texture2D>("./data/tux.png");
-        auto anims = Resource::LoadAnimationsData("./data/tux.json");
-        for(auto& pair : anims){
-            auto animatedSprite = std::make_shared<AnimatedSprite>(texture, pair.second);
-            animations[pair.first] = animatedSprite;
-        }
+        animations = Resource::LoadAnimationsData("./data/tux.json");
+
         // Set default animation
         animationName = "idle";
+
+        // Add animated sprite
+        animatedSprite = std::make_shared<AnimatedSprite>(texture, animations[animationName]);
+        AddChild(animatedSprite);
     }
     Player(float posX, float posY) : Player() {
-        position = raylib::Vector2(posX, posY);
+        transform.position = raylib::Vector2(posX, posY);
     }
     explicit Player(raylib::Vector2 pos) : Player() {
-        position = pos;
+        transform.position = pos;
     }
 
     void Update(float delta) override {
         UpdatePosition(delta);
-        // Update sprite position and advance its animation
-        animations[animationName]->position = position;
-        animations[animationName]->Update(delta);
+
+        GameObject::Update(delta);
     }
-    void Draw() override {
-        animations[animationName]->Draw(); // Draw sprite
-        DrawPosition();
+    void Draw(const Transform2D& parentGlobalTransform) override {
+        const Transform2D gTransform = parentGlobalTransform * transform;
+
+        //TODO: REMOVE THIS DEBUG (Draw debug position)
+        std::string posString = ("X: " + std::to_string(gTransform.position.x) + " Y: " + std::to_string(gTransform.position.y));
+        raylib::DrawText(posString, gTransform.position.x, gTransform.position.y + 30,12, raylib::RED);
+
+        GameObject::Draw(parentGlobalTransform);
+
+        transform.DrawDebug(parentGlobalTransform);
     }
 
 
 private:
     std::string animationName;
-    std::map<std::string, std::shared_ptr<AnimatedSprite>> animations;
+    std::map<std::string, AnimationData> animations;
+    std::shared_ptr<AnimatedSprite> animatedSprite;
+
+    //std::map<std::string, std::shared_ptr<AnimatedSprite>> animations;
 
     void SwitchAnimation(const std::string& name){
-        auto next_animation = std::make_pair(name, animations[name]);
         // Restart animation only if there is a real change
         if(animationName != name){
             animationName = name;
-            animations[animationName]->StartAt(0.f); // playback at 0% <-> frame 0 <-> reset animation
+            animatedSprite->SetAnimData(animations[name]);
+            animatedSprite->StartAt(0.f); // playback at 0% <-> frame 0 <-> reset animation
         }
     }
 
@@ -65,13 +76,13 @@ private:
         if (IsKeyDown(KEY_LEFT)) dir.x -= 1;
         if (IsKeyDown(KEY_DOWN)) dir.y += 1;
         if (IsKeyDown(KEY_UP)) dir.y -= 1;
-        position += dir* 64 * delta;
+        transform.position += dir* 64 * delta;
 
         float len = dir.LengthSqr();
 
         // Flip sprite
         if(dir.x != 0)
-            animations[animationName]->scale.x = dir.x;
+            animatedSprite->transform.scale.x = dir.x;
 
         if(len > 1)
             SwitchAnimation("run"); // Diagonals
@@ -79,11 +90,6 @@ private:
             SwitchAnimation("walk");
         else
             SwitchAnimation("idle");
-    }
-
-    void DrawPosition() const {
-        std::string posString = ("X: " + std::to_string(position.x) + " Y: " + std::to_string(position.y));
-        raylib::DrawText(posString, position.x, position.y + 30,12, raylib::RED);
     }
 };
 
