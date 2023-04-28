@@ -71,19 +71,19 @@ set(ENGINE_SRC
         src/external/raygui/raygui.h
         src/external/raygui/raygui.cpp
 
-
         # CORE
         src/core/Scene.cpp
         src/core/Scene.h
         src/core/Resource.cpp
         src/core/Resource.h
         src/core/GameObject.h
+        src/core/GameObject.cpp
+        src/core/math.cpp
+        src/core/math.h
 
         # RENDERING
         src/render/sprite.cpp
         src/render/sprite.h
-        #src/render/particles.cpp
-        #src/render/particles.h
 
         # GUI Widget
         src/gui/ContextMenu.cpp
@@ -108,6 +108,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::n
 
 # Editor tools
 set(PARTICLE_EDIT_NAME PEdit)
-set(PARTICLE_EDITOR_SRC tools/particle_editor.cpp)
+set(PARTICLE_EDITOR_SRC
+        tools/particle_editor.cpp)
 add_executable(${PARTICLE_EDIT_NAME} ${ENGINE_SRC} ${PARTICLE_EDITOR_SRC})
 target_link_libraries(${PARTICLE_EDIT_NAME} PRIVATE raylib raylib_cpp nlohmann_json::nlohmann_json fmt::fmt)
